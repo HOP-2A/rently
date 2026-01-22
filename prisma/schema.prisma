@@ -8,20 +8,20 @@ datasource db {
 }
 
 enum UserRole {
-  renter
-  landlord
-  admin
+  RENTER
+  LANDLORD
+  ADMIN
 }
 
 enum ApprovalStatus {
-  pending
-  approved
-  rejected
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum RentStatus {
-  active
-  ended
+  ACTIVE
+  ENDED
 }
 
 model User {
@@ -32,7 +32,7 @@ model User {
   about  String?
   avatar String?
 
-  role UserRole @default(renter)
+  role UserRole @default(RENTER)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -58,7 +58,7 @@ model Listing {
   lat Float?
   lng Float?
 
-  status   ApprovalStatus @default(pending)
+  status   ApprovalStatus @default(PENDING)
   isActive Boolean        @default(true)
 
   createdAt DateTime @default(now())
@@ -81,7 +81,7 @@ model Rent {
   renterId String
   renter   User   @relation(fields: [renterId], references: [id], onDelete: Cascade)
 
-  status RentStatus @default(active)
+  status RentStatus @default(ACTIVE)
 
   startAt DateTime  @default(now())
   endAt   DateTime?
