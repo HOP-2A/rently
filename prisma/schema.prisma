@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  renter
+  landlord
+  admin
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum RentStatus {
+  active
+  ended
+}
+
+model User {
+  id     String  @id @default(nanoid())
+  name   String
+  phone  String?
+  email  String? @unique
+  about  String?
+  avatar String?
+
+  role UserRole @default(renter)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  listings Listing[]
+  rents    Rent[]
+  reviews  Review[]
+}
+
+model Listing {
+  id String @id @default(nanoid())
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  title   String
+  address String
+  price   Int
+
+  rooms  Int?
+  sizeM2 Int?
+
+  lat Float?
+  lng Float?
+
+  status   ApprovalStatus @default(pending)
+  isActive Boolean        @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rents   Rent[]
+  reviews Review[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([isActive])
+}
+
+model Rent {
+  id String @id @default(nanoid())
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  renterId String
+  renter   User   @relation(fields: [renterId], references: [id], onDelete: Cascade)
+
+  status RentStatus @default(active)
+
+  startAt DateTime  @default(now())
+  endAt   DateTime?
+
+  createdAt DateTime @default(now())
+  reviews   Review[]
+
+  @@index([listingId])
+  @@index([renterId])
+  @@index([status])
+}
+
+model Review {
+  id String @id @default(nanoid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  rentId String?
+  rent   Rent?   @relation(fields: [rentId], references: [id], onDelete: SetNull)
+
+  rating  Int
+  comment String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([listingId])
+  @@index([rentId])
+}
