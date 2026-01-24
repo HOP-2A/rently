@@ -1,8 +1,6 @@
 "use client";
 
-import React from "react";
-
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,21 +48,24 @@ const initialFormData: FormData = {
 
 export function CreateListingForm() {
   const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [location, setLocation] = useState<string>(formData.address || "");
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const ALL = "All";
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Only choose photo ");
+      toast.error("Only choose photo");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("The photos size should be 5mb or less");
+      toast.error("The photos size should be 5MB or less");
       return;
     }
 
@@ -78,16 +79,14 @@ export function CreateListingForm() {
         body: uploadFormData,
       });
 
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
+      if (!response.ok) throw new Error("Upload failed");
 
       const data = await response.json();
       setFormData((prev) => ({ ...prev, photo: data.url }));
-      toast.success("Photo uploaded succesful");
+      toast.success("Photo uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Something went wrong while uploading photo ");
+      toast.error("Something went wrong while uploading photo");
     } finally {
       setIsUploading(false);
     }
@@ -95,16 +94,13 @@ export function CreateListingForm() {
 
   const handleRemovePhoto = () => {
     setFormData((prev) => ({ ...prev, photo: "" }));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const resetForm = () => {
     setFormData(initialFormData);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    setLocation("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleSubmit = async () => {
@@ -112,7 +108,6 @@ export function CreateListingForm() {
       toast.error("Enter the photo");
       return;
     }
-
     if (!formData.title) {
       toast.error("Enter the title");
       return;
@@ -137,7 +132,7 @@ export function CreateListingForm() {
       });
 
       if (response.ok) {
-        toast.success("Saved Succesful");
+        toast.success("Saved Successfully");
         resetForm();
       } else {
         toast.error("Something went wrong");
@@ -165,6 +160,7 @@ export function CreateListingForm() {
               </h2>
 
               <div className="space-y-5">
+                {/* Photo Upload */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">Photo</Label>
                   <div className="mt-2">
@@ -220,6 +216,7 @@ export function CreateListingForm() {
                   </div>
                 </div>
 
+                {/* Title */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">
                     Listing Title
@@ -234,6 +231,7 @@ export function CreateListingForm() {
                   />
                 </div>
 
+                {/* Rooms / Size / Price */}
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <Label className="mb-2 text-sm text-gray-600">Rooms</Label>
@@ -255,6 +253,7 @@ export function CreateListingForm() {
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
                     <Label className="mb-2 text-sm text-gray-600">
                       Size (m²)
@@ -274,6 +273,7 @@ export function CreateListingForm() {
                       className="border-gray-200"
                     />
                   </div>
+
                   <div>
                     <Label className="mb-2 text-sm text-gray-600">
                       Price (₮/mo)
@@ -293,18 +293,55 @@ export function CreateListingForm() {
                   </div>
                 </div>
 
+                {/* Address */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">Address</Label>
-                  <Input
-                    placeholder="123 Main Street, District"
-                    value={formData.address}
-                    onChange={(e) =>
-                      setFormData({ ...formData, address: e.target.value })
-                    }
-                    className="border-gray-200"
-                  />
+                  <Select
+                    value={location}
+                    onValueChange={(value) => {
+                      setLocation(value);
+                      setFormData((prev) => ({ ...prev, address: value }));
+                    }}
+                  >
+                    <SelectTrigger className="w-[240px] rounded-lg bg-white">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        <SelectValue placeholder="All locations" />
+                      </div>
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value={ALL}>All locations</SelectItem>
+                      <SelectItem value="Bayangol">
+                        Bayangol (Баянгол)
+                      </SelectItem>
+                      <SelectItem value="Bayanzurkh">
+                        Bayanzurkh (Баянзүрх)
+                      </SelectItem>
+                      <SelectItem value="Chingeltei">
+                        Chingeltei (Чингэлтэй)
+                      </SelectItem>
+                      <SelectItem value="Khan-Uul">
+                        Khan-Uul (Хан-Уул)
+                      </SelectItem>
+                      <SelectItem value="Nalaikh">Nalaikh (Налайх)</SelectItem>
+                      <SelectItem value="Songinokhairkhan">
+                        Songinokhairkhan (Сонгинохайрхан)
+                      </SelectItem>
+                      <SelectItem value="Sukhbaatar">
+                        Sukhbaatar (Сүхбаатар)
+                      </SelectItem>
+                      <SelectItem value="Baganuur">
+                        Baganuur (Багануур)
+                      </SelectItem>
+                      <SelectItem value="Bagakhangai">
+                        Bagakhangai (Багахангай)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
+                {/* Save Button */}
                 <div className="flex gap-4 pt-4">
                   <Button
                     onClick={handleSubmit}
@@ -325,6 +362,7 @@ export function CreateListingForm() {
             </Card>
           </div>
 
+          {/* Preview Section */}
           <div className="lg:pt-[72px]">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
               Preview
