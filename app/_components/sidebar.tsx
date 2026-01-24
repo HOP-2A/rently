@@ -2,12 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Mail, Calendar, Bookmark, Trash2, LogOut } from "lucide-react";
+import { Home, Bookmark, Trash2, LogOut, UserRoundIcon } from "lucide-react";
 
 const sidebarItems = [
   { id: "home", href: "/", icon: Home },
-  { id: "mail", href: "/mail", icon: Mail },
-  { id: "calendar", href: "/calendar", icon: Calendar },
+  { id: "profile", href: "/profile", icon: UserRoundIcon },
   { id: "bookmark", href: "/bookmarks", icon: Bookmark },
 ];
 

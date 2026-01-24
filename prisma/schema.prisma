@@ -12,6 +12,11 @@ enum UserRole {
   ADMIN
 }
 
+enum Kind {
+  SALE
+  RENT
+}
+
 enum ApprovalStatus {
   PENDING
   APPROVED
@@ -51,6 +56,8 @@ model Listing {
   title   String
   address String
   price   Int
+  kind    Kind    @default(RENT)
+  isSaved Boolean @default(false)
 
   rooms  Int?
   sizeM2 Int?
