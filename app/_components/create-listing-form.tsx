@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import {
-  Heart,
   MapPin,
   Star,
   CheckCircle2,
@@ -33,6 +32,7 @@ interface FormData {
   lat: number | null;
   lng: number | null;
   photo: string;
+  kind?: "SALE" | "RENT";
 }
 
 const initialFormData: FormData = {
@@ -128,6 +128,7 @@ export function CreateListingForm() {
           lat: formData.lat,
           lng: formData.lng,
           photo: formData.photo,
+          kind: formData.kind,
         }),
       });
 
@@ -160,7 +161,6 @@ export function CreateListingForm() {
               </h2>
 
               <div className="space-y-5">
-                {/* Photo Upload */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">Photo</Label>
                   <div className="mt-2">
@@ -216,7 +216,6 @@ export function CreateListingForm() {
                   </div>
                 </div>
 
-                {/* Title */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">
                     Listing Title
@@ -231,7 +230,6 @@ export function CreateListingForm() {
                   />
                 </div>
 
-                {/* Rooms / Size / Price */}
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div>
                     <Label className="mb-2 text-sm text-gray-600">Rooms</Label>
@@ -241,7 +239,7 @@ export function CreateListingForm() {
                         setFormData({ ...formData, rooms: parseInt(value) })
                       }
                     >
-                      <SelectTrigger className="border-gray-200">
+                      <SelectTrigger className="border-gray-200 hover:cursor-pointer">
                         <SelectValue placeholder="Select" />
                       </SelectTrigger>
                       <SelectContent>
@@ -250,6 +248,24 @@ export function CreateListingForm() {
                             {num}
                           </SelectItem>
                         ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="mb-2 text-sm text-gray-600">Kind</Label>
+                    <Select
+                      value={formData.kind || ""}
+                      onValueChange={(value: "SALE" | "RENT") =>
+                        setFormData({ ...formData, kind: value })
+                      }
+                    >
+                      <SelectTrigger className="border-gray-200 hover:cursor-pointer">
+                        <SelectValue placeholder="Select kind" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="RENT">Rent</SelectItem>
+                        <SelectItem value="SALE">Sale</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -276,11 +292,14 @@ export function CreateListingForm() {
 
                   <div>
                     <Label className="mb-2 text-sm text-gray-600">
-                      Price (₮/mo)
+                      {formData.kind === "SALE" ? "Price (₮)" : "Price (₮/mo)"}
                     </Label>
+
                     <Input
                       type="number"
-                      placeholder="500000"
+                      placeholder={
+                        formData.kind === "SALE" ? "180000000" : "500000"
+                      }
                       value={formData.price || ""}
                       onChange={(e) =>
                         setFormData({
@@ -293,7 +312,6 @@ export function CreateListingForm() {
                   </div>
                 </div>
 
-                {/* Address */}
                 <div>
                   <Label className="mb-2 text-sm text-gray-600">Address</Label>
                   <Select
@@ -303,7 +321,7 @@ export function CreateListingForm() {
                       setFormData((prev) => ({ ...prev, address: value }));
                     }}
                   >
-                    <SelectTrigger className="w-[240px] rounded-lg bg-white">
+                    <SelectTrigger className="w-[240px] rounded-lg bg-white hover:cursor-pointer">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         <SelectValue placeholder="All locations" />
@@ -341,12 +359,11 @@ export function CreateListingForm() {
                   </Select>
                 </div>
 
-                {/* Save Button */}
                 <div className="flex gap-4 pt-4">
                   <Button
                     onClick={handleSubmit}
                     disabled={isLoading || isUploading}
-                    className="bg-[#5d8a6b] px-8 hover:bg-[#4a7558]"
+                    className="bg-[#5d8a6b] px-8 hover:bg-[#4a7558] hover:cursor-pointer"
                   >
                     {isLoading ? (
                       <>
@@ -362,14 +379,14 @@ export function CreateListingForm() {
             </Card>
           </div>
 
-          {/* Preview Section */}
-          <div className="lg:pt-[72px]">
+          {/* Preview heseg */}
+          <div className="lg:pt-[72px] ">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
               Preview
             </h2>
 
-            <Card className="overflow-hidden bg-white">
-              <div className="relative">
+            <Card className="overflow-hidden bg-white ">
+              <div className="relative p-2 rounded-xl">
                 {formData.photo ? (
                   <img
                     src={formData.photo || "/placeholder.svg"}
@@ -377,25 +394,29 @@ export function CreateListingForm() {
                     className="h-48 w-full object-cover"
                   />
                 ) : (
-                  <div className="flex h-48 w-full items-center justify-center bg-gray-100">
+                  <div className="flex h-48 w-full items-center justify-center bg-gray-100 rounded-xl p-">
                     <div className="text-center text-gray-400">
                       <Upload className="mx-auto h-8 w-8" />
                       <p className="mt-2 text-sm">No photo uploaded</p>
                     </div>
                   </div>
                 )}
-                <button className="absolute right-3 top-3 rounded-full bg-white/80 p-2">
-                  <Heart className="h-5 w-5 text-gray-600" />
-                </button>
+                <button className="absolute right-3 top-3 rounded-full bg-white/80 p-2"></button>
               </div>
               <div className="p-4">
                 <h3 className="font-semibold text-foreground">
                   {formData.title || "Your Listing Title"}
                 </h3>
+                <span className="">For: {formData.kind ?? "-"}</span>
                 <p className="mb-2 text-xl font-bold text-[#5d8a6b]">
-                  ₮{formData.price.toLocaleString() || "0"}
-                  <span className="text-sm font-normal text-gray-500">/mo</span>
+                  ₮{(formData.price || 0).toLocaleString()}
+                  {formData.kind === "RENT" && (
+                    <span className="text-sm font-normal text-gray-500">
+                      /mo
+                    </span>
+                  )}
                 </p>
+
                 <div className="flex items-center gap-1 text-sm text-gray-600">
                   <MapPin className="h-4 w-4 text-[#5d8a6b]" />
                   {formData.address || "Address will appear here"}
