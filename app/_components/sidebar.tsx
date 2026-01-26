@@ -38,24 +38,6 @@ export default function Sidebar() {
           </Link>
         );
       })}
-
-      <div className="mt-auto space-y-4">
-        <button
-          type="button"
-          className="p-3 rounded-lg text-gray-400 hover:text-gray-600 transition"
-          onClick={() => {}}
-        >
-          <Trash2 className="w-6 h-6" />
-        </button>
-
-        <button
-          type="button"
-          className="p-3 rounded-lg text-red-400 hover:text-red-500 transition"
-          onClick={() => {}}
-        >
-          <LogOut className="w-6 h-6" />
-        </button>
-      </div>
     </aside>
   );
 }

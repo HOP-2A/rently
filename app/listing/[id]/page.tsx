@@ -2,7 +2,7 @@
 
 import { Bookmark } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 export type OwnerFromApi = {
@@ -95,7 +95,7 @@ export default function Page() {
       : Array.isArray(rawId)
         ? rawId[0]
         : undefined;
-
+  const { back } = useRouter();
   const [listing, setListing] = useState<ListingFromApi | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -295,12 +295,12 @@ export default function Page() {
       <div className="sticky top-0 z-10 bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between gap-4">
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-gray-50"
+            <div
+              className="inline-flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-gray-50 hover:cursor-pointer"
+              onClick={() => back()}
             >
               ← Буцах
-            </Link>
+            </div>
 
             <div className="flex items-center gap-2">
               <StatusPill label={listing.status} tone={statusTone} />
