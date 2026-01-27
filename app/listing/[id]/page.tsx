@@ -77,13 +77,13 @@ function StatusPill({ label, tone = "gray" }: { label: string; tone?: Tone }) {
 }
 
 function maskPhone(phone: string): string {
-  const cleaned = phone.replace(/\s/g, "");
-  if (cleaned.length < 8) return "****";
+  const digits = phone.replace(/\D/g, "");
 
-  const parts = phone.split(" ");
-  if (parts.length >= 3) return `${parts[0]} **** ${parts[parts.length - 1]}`;
+  if (digits.length < 8) return "****";
 
-  return cleaned.slice(0, 4) + "****" + cleaned.slice(-4);
+  const middleStart = Math.floor((digits.length - 4) / 2);
+
+  return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
 export default function Page() {
@@ -277,13 +277,13 @@ export default function Page() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPrivacyModal(false)}
-                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                className="flex-1 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 hover:cursor-pointer"
               >
                 Цуцлах
               </button>
               <button
                 onClick={handleAgreePrivacy}
-                className="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                className="flex-1 px-4 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
               >
                 Зөвшөөрөх
               </button>
@@ -403,7 +403,7 @@ export default function Page() {
                       <button
                         disabled={!owner?.phone}
                         onClick={handleRevealPhone}
-                        className={`flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 ${
+                        className={`flex-1 hover:cursor-pointer px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 ${
                           !owner?.phone ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
@@ -416,14 +416,14 @@ export default function Page() {
                             if (!owner?.phone) return;
                             await copyToClipboard(owner.phone);
                           }}
-                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-white hover:bg-gray-50"
+                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-white hover:bg-gray-50 hover:cursor-pointer"
                         >
                           Хуулах
                         </button>
 
                         <a
                           href={`tel:${owner?.phone ?? ""}`}
-                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 text-center"
+                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 text-center hover:cursor-pointer"
                         >
                           Залгах
                         </a>
@@ -476,14 +476,14 @@ export default function Page() {
                   href={mapsUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold"
+                  className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold hover:cursor-pointer"
                 >
                   Газрын зураг
                 </a>
               ) : (
                 <button
                   disabled
-                  className="px-5 py-2.5 rounded-xl border bg-white text-sm font-semibold opacity-50 cursor-not-allowed"
+                  className="px-5 py-2.5 rounded-xl border bg-white text-sm font-semibold opacity-50 cursor-not-allowed "
                 >
                   Газрын зураггүй
                 </button>
@@ -491,7 +491,7 @@ export default function Page() {
 
               <button
                 onClick={() => copyToClipboard(window.location.href)}
-                className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold"
+                className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold hover:cursor-pointer"
               >
                 Линк хуулах
               </button>
