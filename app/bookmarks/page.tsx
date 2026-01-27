@@ -5,25 +5,20 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   Home,
-  MapPin,
   Users,
-  SlidersHorizontal,
-  X,
   Bookmark,
+  X,
+  SlidersHorizontal,
 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
-const ALL = "__ALL__";
-
-export type ListingKind = "RENT" | "SELL";
-
-type ListingApiKind = ListingKind | "SALE" | "Sale" | "sell" | "rent" | null;
+type ListingApiKind =
+  | "RENT"
+  | "SELL"
+  | "SALE"
+  | "Sale"
+  | "sell"
+  | "rent"
+  | null;
 
 export type ListingFromApi = {
   id: string;
@@ -40,48 +35,52 @@ export type ListingFromApi = {
   createdAt: string;
   updatedAt: string;
   isSaved: boolean;
-
   kind: ListingApiKind;
-
   photo?: string | null;
   rating?: number | null;
   image?: string | null;
   type?: string | null;
 };
 
+type ListingKind = "RENT" | "SELL";
 type Listing = Omit<ListingFromApi, "kind"> & { kind: ListingKind };
 
-function normalizeKind(kind: ListingFromApi["kind"]): ListingKind {
+function normalizeKind(kind: ListingApiKind): ListingKind {
   const raw = String(kind ?? "")
     .trim()
     .toUpperCase();
   return raw === "SELL" || raw === "SALE" ? "SELL" : "RENT";
 }
 
+type ActiveTab = "all" | "buy" | "rent";
+
 export default function App() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [active, setActive] = useState<"all" | "buy" | "rent">("all");
+  const [active, setActive] = useState<ActiveTab>("all");
+  const [showFilters, setShowFilters] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [location, setLocation] = useState<string>(ALL);
-  const [priceRange, setPriceRange] = useState<string>(ALL);
-  const [roomsRange, setRoomsRange] = useState<string>(ALL);
-  const [sizeRange, setSizeRange] = useState<string>(ALL);
-  const [approvalStatus, setApprovalStatus] = useState<string>(ALL);
-  const [activeOnly, setActiveOnly] = useState<boolean>(true);
-  const [showFilters, setShowFilters] = useState(false);
+
+  const hasActiveFilters = active !== "all";
+
+  const pillClass = useMemo(() => {
+    if (active === "buy") return "translate-x-full";
+    if (active === "rent") return "translate-x-[200%]";
+    return "translate-x-0";
+  }, [active]);
 
   useEffect(() => {
     const run = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/getListning", { cache: "no-store" });
+        const res = await fetch("/api/getListning/saved", {
+          cache: "no-store",
+        });
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
         const data: unknown = await res.json();
-
         const safeArray: ListingFromApi[] = Array.isArray(data)
           ? (data as ListingFromApi[])
           : [];
@@ -103,112 +102,29 @@ export default function App() {
     run();
   }, []);
 
-  const clearFilters = () => {
-    setLocation(ALL);
-    setPriceRange(ALL);
-    setRoomsRange(ALL);
-    setSizeRange(ALL);
-    setApprovalStatus(ALL);
-    setActiveOnly(true);
-    setSearchQuery("");
-  };
-
-  const hasActiveFilters = useMemo(() => {
-    return (
-      location !== ALL ||
-      priceRange !== ALL ||
-      roomsRange !== ALL ||
-      sizeRange !== ALL ||
-      approvalStatus !== ALL ||
-      !activeOnly ||
-      searchQuery.trim() !== ""
-    );
-  }, [
-    location,
-    priceRange,
-    roomsRange,
-    sizeRange,
-    approvalStatus,
-    activeOnly,
-    searchQuery,
-  ]);
-
   const filteredListings = useMemo(() => {
-    let filtered = [...listings];
+    let arr = listings;
 
-    if (active === "rent") filtered = filtered.filter((l) => l.kind === "RENT");
-    if (active === "buy") filtered = filtered.filter((l) => l.kind === "SELL");
+    // tab filter
+    if (active === "buy") arr = arr.filter((l) => l.kind === "SELL");
+    if (active === "rent") arr = arr.filter((l) => l.kind === "RENT");
 
-    if (activeOnly) filtered = filtered.filter((l) => l.isActive === true);
+    // search filter
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return arr;
 
-    if (approvalStatus !== ALL) {
-      filtered = filtered.filter((l) => l.status === approvalStatus);
-    }
-
-    if (priceRange !== ALL) {
-      const [minPrice, maxPrice] = priceRange
-        .split("-")
-        .map((p) => Number(p.trim()));
-      filtered = filtered.filter(
-        (l) => l.price >= minPrice && l.price <= maxPrice,
-      );
-    }
-
-    if (roomsRange !== ALL) {
-      const [minR, maxR] = roomsRange.split("-").map((x) => Number(x.trim()));
-      filtered = filtered.filter((l) => {
-        if (l.rooms == null) return false;
-        return l.rooms >= minR && l.rooms <= maxR;
-      });
-    }
-
-    if (sizeRange !== ALL) {
-      const [minS, maxS] = sizeRange.split("-").map((x) => Number(x.trim()));
-      filtered = filtered.filter((l) => {
-        if (l.sizeM2 == null) return false;
-        return l.sizeM2 >= minS && l.sizeM2 <= maxS;
-      });
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((l) => {
-        return (
-          l.address.toLowerCase().includes(q) ||
-          l.title.toLowerCase().includes(q)
-        );
-      });
-    }
-
-    if (location !== ALL) {
-      const city = location.split(",")[0].toLowerCase();
-      filtered = filtered.filter((l) => l.address.toLowerCase().includes(city));
-    }
-
-    return filtered;
-  }, [
-    listings,
-    active,
-    activeOnly,
-    approvalStatus,
-    priceRange,
-    roomsRange,
-    sizeRange,
-    searchQuery,
-    location,
-  ]);
-
-  const pillClass =
-    active === "all"
-      ? "translate-x-0"
-      : active === "buy"
-        ? "translate-x-full"
-        : "translate-x-[200%]";
+    return arr.filter(
+      (l) =>
+        l.address.toLowerCase().includes(q) ||
+        l.title.toLowerCase().includes(q),
+    );
+  }, [listings, searchQuery, active]);
 
   const toggleSaved = async (id: string) => {
     const current = listings.find((x) => x.id === id);
     const nextSaved = !(current?.isSaved ?? false);
 
+    // optimistic
     setListings((prev) =>
       prev.map((l) => (l.id === id ? { ...l, isSaved: nextSaved } : l)),
     );
@@ -237,9 +153,14 @@ export default function App() {
           l.id === returnedId ? { ...l, isSaved: returnedSaved } : l,
         ),
       );
+
+      // if unsaved, remove from saved page
+      if (!returnedSaved) {
+        setListings((prev) => prev.filter((l) => l.id !== returnedId));
+      }
     } catch (e) {
       console.error(e);
-
+      // rollback
       setListings((prev) =>
         prev.map((l) => (l.id === id ? { ...l, isSaved: !nextSaved } : l)),
       );
@@ -263,7 +184,7 @@ export default function App() {
             <nav className="hidden md:flex">
               <div className="relative flex bg-gray-100 rounded-full p-1 shadow-inner w-[360px]">
                 <div
-                  className={`absolute top-1 left-1 h-[calc(100%-0.5rem)] w-1/3 rounded-full bg-white shadow transition-all duration-300 ease-out ${pillClass}`}
+                  className={`absolute top-1 left-1 h-[calc(100%-0.5rem)] w-1/3 rounded-full bg-white shadow transition-transform duration-300 ease-out ${pillClass}`}
                 />
 
                 <button
@@ -314,7 +235,7 @@ export default function App() {
               </div>
 
               <button
-                onClick={() => setShowFilters(!showFilters)}
+                onClick={() => setShowFilters((v) => !v)}
                 className="lg:hidden p-2 rounded-xl border bg-white hover:bg-gray-50 relative"
               >
                 <SlidersHorizontal className="w-5 h-5" />
@@ -324,137 +245,93 @@ export default function App() {
               </button>
             </div>
           </div>
+
+          {/* mobile filters */}
+          {showFilters && (
+            <div className="lg:hidden pb-4">
+              <div className="mt-3 bg-gray-50 border rounded-2xl p-3">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Хайх..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setActive("all")}
+                    className={`py-2 rounded-xl text-sm font-medium border ${
+                      active === "all"
+                        ? "bg-white border-teal-200 text-teal-700"
+                        : "bg-gray-100 border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    Бүгд
+                  </button>
+                  <button
+                    onClick={() => setActive("buy")}
+                    className={`py-2 rounded-xl text-sm font-medium border ${
+                      active === "buy"
+                        ? "bg-white border-teal-200 text-teal-700"
+                        : "bg-gray-100 border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    Авах
+                  </button>
+                  <button
+                    onClick={() => setActive("rent")}
+                    className={`py-2 rounded-xl text-sm font-medium border ${
+                      active === "rent"
+                        ? "bg-white border-teal-200 text-teal-700"
+                        : "bg-gray-100 border-gray-200 text-gray-600"
+                    }`}
+                  >
+                    Түрээс
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="lg:hidden bg-white border-b px-4 py-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Хайх..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-        </div>
-      </div>
-
-      <div
-        className={`bg-white border-b ${showFilters ? "block" : "hidden lg:block"}`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between mb-4 h-15">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-gray-600" />
-              <span className="font-semibold text-gray-700">Шүүлтүүр</span>
-              {hasActiveFilters && (
-                <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-semibold rounded-full">
-                  Идэвхитэй
-                </span>
-              )}
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-md">
+            <Bookmark className="w-6 h-6 text-white" />
           </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Хадгалсан зарууд
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Таны хадгалсан бүх зарууд энд байна
+            </p>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:flex lg:flex-wrap gap-3">
-            <Select value={location} onValueChange={setLocation}>
-              <SelectTrigger className="rounded-xl bg-white border-gray-200">
-                <div className="flex items-center gap-2 hover:cursor-pointer">
-                  <MapPin className="w-4 h-4 text-gray-500" />
-                  <SelectValue placeholder="Байршил" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Бүх байршил</SelectItem>
-                <SelectItem value="Bayangol">Баянгол</SelectItem>
-                <SelectItem value="Bayanzurkh">Баянзүрх</SelectItem>
-                <SelectItem value="Chingeltei">Чингэлтэй</SelectItem>
-                <SelectItem value="Khan-Uul">Хан-Уул</SelectItem>
-                <SelectItem value="Nalaikh">Налайх</SelectItem>
-                <SelectItem value="Songinokhairkhan">Сонгинохайрхан</SelectItem>
-                <SelectItem value="Sukhbaatar">Сүхбаатар</SelectItem>
-                <SelectItem value="Baganuur">Багануур</SelectItem>
-                <SelectItem value="Bagakhangai">Багахангай</SelectItem>
-              </SelectContent>
-            </Select>
+        <div className="flex items-center justify-between mb-6">
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold text-gray-900">
+              {filteredListings.length}
+            </span>{" "}
+            зар олдлоо
+          </p>
 
-            <Select value={priceRange} onValueChange={setPriceRange}>
-              <SelectTrigger className="rounded-xl bg-white border-gray-200 hover:cursor-pointer">
-                <SelectValue placeholder="Үнэ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Бүх үнэ</SelectItem>
-                <SelectItem value="0-1000000">0 - 1,000,000₮</SelectItem>
-                <SelectItem value="1000000-2000000">
-                  1,000,000 - 2,000,000₮
-                </SelectItem>
-                <SelectItem value="2000000-4000000">
-                  2,000,000 - 4,000,000₮
-                </SelectItem>
-                <SelectItem value="4000000-999999999">4,000,000₮+</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={roomsRange} onValueChange={setRoomsRange}>
-              <SelectTrigger className="rounded-xl bg-white border-gray-200 hover:cursor-pointer">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-gray-500" />
-                  <SelectValue placeholder="Өрөө" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Бүх өрөө</SelectItem>
-                <SelectItem value="0-1">Studio / 1</SelectItem>
-                <SelectItem value="2-2">2 өрөө</SelectItem>
-                <SelectItem value="3-3">3 өрөө</SelectItem>
-                <SelectItem value="4-99">4+ өрөө</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={sizeRange} onValueChange={setSizeRange}>
-              <SelectTrigger className="rounded-xl bg-white border-gray-200 hover:cursor-pointer">
-                <SelectValue placeholder="Талбай" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL}>Бүх талбай</SelectItem>
-                <SelectItem value="0-30">0 - 30 м²</SelectItem>
-                <SelectItem value="30-50">30 - 50 м²</SelectItem>
-                <SelectItem value="50-80">50 - 80 м²</SelectItem>
-                <SelectItem value="80-9999">80+ м²</SelectItem>
-              </SelectContent>
-            </Select>
-
+          {searchQuery.trim() && (
             <button
-              onClick={() => setActiveOnly((v) => !v)}
-              className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all hover:cursor-pointer ${
-                activeOnly
-                  ? "bg-teal-50 border-teal-200 text-teal-700"
-                  : "bg-red-50 border-red-200 text-red-700 "
-              }`}
+              onClick={() => setSearchQuery("")}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:cursor-pointer rounded-xl bg-blue-100 px-3 py-1.5 hover:bg-blue-200 transition-colors"
             >
-              {activeOnly ? "Бүх заруудыг харах" : "Идэвхитэй заруудыг харах"}
+              <X className="w-4 h-4" />
+              Хайлт цэвэрлэх
             </button>
-
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="text-sm text-blue-600 hover:blue-teal-700 font-medium hover:text-blue-800 flex items-center gap-1 hover:cursor-pointer rounded-2xl bg-blue-200 p-2 pr-3 hover:bg-blue-300"
-              >
-                <X className="w-4 h-4" />
-                Шүүлтүүрийг цэвэрлэх
-              </button>
-            )}
-          </div>
+          )}
         </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-        <p className="text-sm text-gray-600">
-          <span className="font-semibold text-gray-900">
-            {filteredListings.length}
-          </span>{" "}
-          зар олдлоо
-        </p>
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-12">
@@ -476,20 +353,31 @@ export default function App() {
           </div>
         ) : filteredListings.length === 0 ? (
           <div className="text-center py-20">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Search className="w-10 h-10 text-gray-400" />
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bookmark
+                className={`w-5 h-5 transition-colors 
+
+                          ? "fill-blue-200 text-blue-500"
+                          : "text-gray-600"`}
+              />
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Зар олдсонгүй
+              {searchQuery.trim()
+                ? "Хайлтаар зар олдсонгүй"
+                : "Хадгалсан зар байхгүй байна"}
             </h3>
-            <p className="text-gray-500 mb-6">Шүүлтүүрээ өөрчилж үзнэ үү</p>
-            {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                className="px-6 py-2.5 bg-teal-600 hover:cursor-pointer text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
+            <p className="text-gray-500 mb-6">
+              {searchQuery.trim()
+                ? "Хайлтын үгээ өөрчилж үзнэ үү"
+                : "Та зар хадгалснаар энд харагдана"}
+            </p>
+            {!searchQuery.trim() && (
+              <Link
+                href="/"
+                className="inline-block px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
               >
-                Шүүлтүүрийг цэвэрлэх
-              </button>
+                Зарууд үзэх
+              </Link>
             )}
           </div>
         ) : (
@@ -505,31 +393,32 @@ export default function App() {
                   href={`/listing/${listing.id}`}
                   className="block group"
                 >
-                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden  duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
                     <div className="relative overflow-hidden h-56">
                       {photo ? (
                         <img
                           src={photo}
                           alt={listing.address}
-                          className="w-full h-full object-cover duration-500 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-200" />
                       )}
 
-                      {/* <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" /> */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-                      <div className="flex gap-3 absolute top-3 right-3 p-2.5 rounded-full shadow-lg duration-300 hover:scale-110 active:scale-95">
+                      <div className="flex gap-3 absolute top-3 right-3">
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             toggleSaved(listing.id);
                           }}
-                          className=" bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg  duration-300 hover:scale-110 active:scale-95"
+                          className="bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer"
+                          aria-label="Toggle saved"
                         >
                           <Bookmark
-                            className={`w-5 h-5 transition-colors hover:cursor-pointer ${
+                            className={`w-5 h-5 transition-colors ${
                               listing.isSaved
                                 ? "fill-blue-200 text-blue-500"
                                 : "text-gray-600"
