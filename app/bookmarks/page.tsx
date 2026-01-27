@@ -105,11 +105,9 @@ export default function App() {
   const filteredListings = useMemo(() => {
     let arr = listings;
 
-    // tab filter
     if (active === "buy") arr = arr.filter((l) => l.kind === "SELL");
     if (active === "rent") arr = arr.filter((l) => l.kind === "RENT");
 
-    // search filter
     const q = searchQuery.trim().toLowerCase();
     if (!q) return arr;
 
@@ -124,7 +122,6 @@ export default function App() {
     const current = listings.find((x) => x.id === id);
     const nextSaved = !(current?.isSaved ?? false);
 
-    // optimistic
     setListings((prev) =>
       prev.map((l) => (l.id === id ? { ...l, isSaved: nextSaved } : l)),
     );
@@ -154,13 +151,12 @@ export default function App() {
         ),
       );
 
-      // if unsaved, remove from saved page
       if (!returnedSaved) {
         setListings((prev) => prev.filter((l) => l.id !== returnedId));
       }
     } catch (e) {
       console.error(e);
-      // rollback
+
       setListings((prev) =>
         prev.map((l) => (l.id === id ? { ...l, isSaved: !nextSaved } : l)),
       );
@@ -246,7 +242,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* mobile filters */}
+
           {showFilters && (
             <div className="lg:hidden pb-4">
               <div className="mt-3 bg-gray-50 border rounded-2xl p-3">

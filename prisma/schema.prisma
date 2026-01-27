@@ -29,11 +29,14 @@ enum RentStatus {
 }
 
 model User {
-  id     String  @id @default(nanoid())
-  name   String
-  phone  String?
-  email  String? @unique
-  about  String?
+  id       String @id @default(nanoid())
+  clerkId  String @unique
+  username String @unique
+  name     String
+
+  phone  String
+  email  String  @unique
+  about  String
   avatar String?
 
   role UserRole @default(RENTER)
