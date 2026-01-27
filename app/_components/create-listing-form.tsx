@@ -54,7 +54,6 @@ export function CreateListingForm() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const ALL = "All";
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -119,7 +118,7 @@ export function CreateListingForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ownerId: "qMolIdljSPQ1F_x_lx-FD",
+          ownerId: "NZn2ejIXlDy7d71CR0VYe",
           title: formData.title,
           address: formData.address,
           price: formData.price,
@@ -379,7 +378,6 @@ export function CreateListingForm() {
             </Card>
           </div>
 
-          {/* Preview heseg */}
           <div className="lg:pt-[72px] ">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
               Preview
