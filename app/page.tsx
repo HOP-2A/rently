@@ -517,8 +517,6 @@ export default function App() {
                         <div className="w-full h-full bg-gray-200" />
                       )}
 
-                      {/* <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" /> */}
-
                       <div className="flex gap-3 absolute top-3 right-3 p-2.5 rounded-full shadow-lg duration-300 hover:scale-110 active:scale-95">
                         <button
                           onClick={(e) => {
