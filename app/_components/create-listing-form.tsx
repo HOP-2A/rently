@@ -22,6 +22,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/providers/authProvider";
 
 interface FormData {
   title: string;
@@ -52,9 +54,10 @@ export function CreateListingForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const { user: clerkUser } = useUser();
+  const userData = useAuth(clerkUser?.id);
+  const user = userData?.user;
   const ALL = "All";
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -119,7 +122,7 @@ export function CreateListingForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ownerId: "qMolIdljSPQ1F_x_lx-FD",
+          ownerId: user?.id,
           title: formData.title,
           address: formData.address,
           price: formData.price,
@@ -379,7 +382,6 @@ export function CreateListingForm() {
             </Card>
           </div>
 
-          {/* Preview heseg */}
           <div className="lg:pt-[72px] ">
             <h2 className="mb-4 text-lg font-semibold text-foreground">
               Preview
