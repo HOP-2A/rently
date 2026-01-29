@@ -19,10 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/providers/authProvider";
+
 const ALL = "__ALL__";
 
 export type ListingKind = "RENT" | "SELL";
-
 type ListingApiKind = ListingKind | "SALE" | "Sale" | "sell" | "rent" | null;
 
 export type ListingFromApi = {
@@ -40,9 +42,7 @@ export type ListingFromApi = {
   createdAt: string;
   updatedAt: string;
   isSaved: boolean;
-
   kind: ListingApiKind;
-
   photo?: string | null;
   rating?: number | null;
   image?: string | null;
@@ -57,6 +57,16 @@ function normalizeKind(kind: ListingFromApi["kind"]): ListingKind {
     .toUpperCase();
   return raw === "SELL" || raw === "SALE" ? "SELL" : "RENT";
 }
+
+function safeRange(value: string): [number, number] | null {
+  const parts = value.split("-").map((x) => Number(x.trim()));
+  if (parts.length !== 2) return null;
+  const [a, b] = parts;
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  return [a, b];
+}
+
+type Mode = "ALL" | "SAVED";
 
 export default function App() {
   const [listings, setListings] = useState<Listing[]>([]);
@@ -73,35 +83,141 @@ export default function App() {
   const [activeOnly, setActiveOnly] = useState<boolean>(true);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    const run = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/getListning", { cache: "no-store" });
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+  const [mode, setMode] = useState<Mode>("ALL");
 
-        const data: unknown = await res.json();
+  const { user: clerkUser, isLoaded: clerkLoaded } = useUser();
+  const auth = useAuth(clerkUser?.id);
+  const user = auth?.user;
 
-        const safeArray: ListingFromApi[] = Array.isArray(data)
-          ? (data as ListingFromApi[])
-          : [];
+  const fetchSavedIds = async (userId: string): Promise<Set<string>> => {
+    const res = await fetch(
+      `/api/getListning/saved/${encodeURIComponent(userId)}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return new Set();
 
-        const normalized: Listing[] = safeArray.map((l) => ({
+    const data: unknown = await res.json();
+    const arr: ListingFromApi[] = Array.isArray(data)
+      ? (data as ListingFromApi[])
+      : [];
+    return new Set(arr.map((l) => l.id));
+  };
+
+  const fetchAllListings = async (savedIds?: Set<string>) => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/getListning", { cache: "no-store" });
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+      const data: unknown = await res.json();
+      const safeArray: ListingFromApi[] = Array.isArray(data)
+        ? (data as ListingFromApi[])
+        : [];
+
+      setListings(
+        safeArray.map((l) => ({
           ...l,
           kind: normalizeKind(l.kind),
-        }));
+          isSaved: savedIds ? savedIds.has(l.id) : false,
+        })),
+      );
+    } catch (e) {
+      console.error(e);
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setListings(normalized);
+  const fetchSavedListings = async (userId: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `/api/getListning/saved/${encodeURIComponent(userId)}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+      const data: unknown = await res.json();
+      const safeArray: ListingFromApi[] = Array.isArray(data)
+        ? (data as ListingFromApi[])
+        : [];
+
+      setListings(
+        safeArray.map((l) => ({
+          ...l,
+          kind: normalizeKind(l.kind),
+          isSaved: true,
+        })),
+      );
+    } catch (e) {
+      console.error(e);
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (mode !== "ALL") return;
+    if (!clerkLoaded) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        if (user?.id) {
+          const savedIds = await fetchSavedIds(user.id);
+          if (!cancelled) await fetchAllListings(savedIds);
+        } else {
+          if (!cancelled) await fetchAllListings(undefined);
+        }
       } catch (e) {
         console.error(e);
-        setListings([]);
-      } finally {
-        setLoading(false);
       }
-    };
+    })();
 
-    run();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, clerkLoaded, user?.id]);
+
+  const toggleSave = async (listingId: string) => {
+    if (!user?.id) return;
+
+    const current = listings.find((l) => l.id === listingId);
+    if (!current) return;
+
+    const currentSaved = mode === "SAVED" ? true : !!current.isSaved;
+    const nextSaved = !currentSaved;
+
+    const snapshot = listings;
+
+    setListings((prev) => {
+      if (mode === "SAVED" && nextSaved === false) {
+        return prev.filter((l) => l.id !== listingId);
+      }
+      return prev.map((l) =>
+        l.id === listingId ? { ...l, isSaved: nextSaved } : l,
+      );
+    });
+
+    try {
+      const method = nextSaved ? "POST" : "DELETE";
+
+      const res = await fetch("/api/bookMark", {
+        method,
+        headers: { "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({ renterId: user.id, listingId }),
+      });
+
+      if (!res.ok) throw new Error(`Toggle save failed: ${res.status}`);
+    } catch (e) {
+      console.error(e);
+      setListings(snapshot);
+    }
+  };
 
   const clearFilters = () => {
     setLocation(ALL);
@@ -146,38 +262,44 @@ export default function App() {
     }
 
     if (priceRange !== ALL) {
-      const [minPrice, maxPrice] = priceRange
-        .split("-")
-        .map((p) => Number(p.trim()));
-      filtered = filtered.filter(
-        (l) => l.price >= minPrice && l.price <= maxPrice,
-      );
+      const r = safeRange(priceRange);
+      if (r) {
+        const [minPrice, maxPrice] = r;
+        filtered = filtered.filter(
+          (l) => l.price >= minPrice && l.price <= maxPrice,
+        );
+      }
     }
 
     if (roomsRange !== ALL) {
-      const [minR, maxR] = roomsRange.split("-").map((x) => Number(x.trim()));
-      filtered = filtered.filter((l) => {
-        if (l.rooms == null) return false;
-        return l.rooms >= minR && l.rooms <= maxR;
-      });
+      const r = safeRange(roomsRange);
+      if (r) {
+        const [minR, maxR] = r;
+        filtered = filtered.filter((l) => {
+          if (l.rooms == null) return false;
+          return l.rooms >= minR && l.rooms <= maxR;
+        });
+      }
     }
 
     if (sizeRange !== ALL) {
-      const [minS, maxS] = sizeRange.split("-").map((x) => Number(x.trim()));
-      filtered = filtered.filter((l) => {
-        if (l.sizeM2 == null) return false;
-        return l.sizeM2 >= minS && l.sizeM2 <= maxS;
-      });
+      const r = safeRange(sizeRange);
+      if (r) {
+        const [minS, maxS] = r;
+        filtered = filtered.filter((l) => {
+          if (l.sizeM2 == null) return false;
+          return l.sizeM2 >= minS && l.sizeM2 <= maxS;
+        });
+      }
     }
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      filtered = filtered.filter((l) => {
-        return (
+      filtered = filtered.filter(
+        (l) =>
           l.address.toLowerCase().includes(q) ||
-          l.title.toLowerCase().includes(q)
-        );
-      });
+          l.title.toLowerCase().includes(q),
+      );
     }
 
     if (location !== ALL) {
@@ -205,47 +327,6 @@ export default function App() {
         ? "translate-x-full"
         : "translate-x-[200%]";
 
-  const toggleSaved = async (id: string) => {
-    const current = listings.find((x) => x.id === id);
-    const nextSaved = !(current?.isSaved ?? false);
-
-    setListings((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, isSaved: nextSaved } : l)),
-    );
-
-    try {
-      const res = await fetch(`/api/listing/${id}/saved`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isSaved: nextSaved }),
-      });
-
-      if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
-
-      const data: unknown = await res.json();
-      const parsed =
-        typeof data === "object" && data !== null
-          ? (data as { id?: unknown; isSaved?: unknown })
-          : {};
-
-      const returnedId = typeof parsed.id === "string" ? parsed.id : id;
-      const returnedSaved =
-        typeof parsed.isSaved === "boolean" ? parsed.isSaved : nextSaved;
-
-      setListings((prev) =>
-        prev.map((l) =>
-          l.id === returnedId ? { ...l, isSaved: returnedSaved } : l,
-        ),
-      );
-    } catch (e) {
-      console.error(e);
-
-      setListings((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, isSaved: !nextSaved } : l)),
-      );
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-20 bg-white border-b shadow-sm">
@@ -265,7 +346,6 @@ export default function App() {
                 <div
                   className={`absolute top-1 left-1 h-[calc(100%-0.5rem)] w-1/3 rounded-full bg-white shadow transition-all duration-300 ease-out ${pillClass}`}
                 />
-
                 <button
                   onClick={() => setActive("all")}
                   className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
@@ -276,7 +356,6 @@ export default function App() {
                 >
                   Бүгд
                 </button>
-
                 <button
                   onClick={() => setActive("buy")}
                   className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
@@ -287,7 +366,6 @@ export default function App() {
                 >
                   Худалдаж авах
                 </button>
-
                 <button
                   onClick={() => setActive("rent")}
                   className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
@@ -438,7 +516,7 @@ export default function App() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="text-sm text-blue-600 hover:blue-teal-700 font-medium hover:text-blue-800 flex items-center gap-1 hover:cursor-pointer rounded-2xl bg-blue-200 p-2 pr-3 hover:bg-blue-300"
+                className="text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center gap-1 hover:cursor-pointer rounded-2xl bg-blue-200 p-2 pr-3 hover:bg-blue-300"
               >
                 <X className="w-4 h-4" />
                 Шүүлтүүрийг цэвэрлэх
@@ -505,7 +583,7 @@ export default function App() {
                   href={`/listing/${listing.id}`}
                   className="block group"
                 >
-                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden  duration-300 hover:-translate-y-1 hover:shadow-xl">
+                  <div className="bg-white rounded-2xl shadow-sm overflow-hidden duration-300 hover:-translate-y-1 hover:shadow-xl">
                     <div className="relative overflow-hidden h-56">
                       {photo ? (
                         <img
@@ -517,17 +595,27 @@ export default function App() {
                         <div className="w-full h-full bg-gray-200" />
                       )}
 
-                      <div className="flex gap-3 absolute top-3 right-3 p-2.5 rounded-full shadow-lg duration-300 hover:scale-110 active:scale-95">
+                      <div className="absolute top-3 right-3">
                         <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            toggleSaved(listing.id);
+                            toggleSave(listing.id);
                           }}
-                          className=" bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg  duration-300 hover:scale-110 active:scale-95"
+                          className="bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer"
+                          aria-label="Save listing"
+                          title={
+                            !user?.id
+                              ? "Нэвтэрсний дараа хадгална"
+                              : listing.isSaved
+                                ? "Saved (click to unsave)"
+                                : "Save"
+                          }
+                          disabled={!user?.id}
                         >
                           <Bookmark
-                            className={`w-5 h-5 transition-colors hover:cursor-pointer ${
+                            className={`w-5 h-5 transition-colors ${
                               listing.isSaved
                                 ? "fill-blue-200 text-blue-500"
                                 : "text-gray-600"
@@ -606,6 +694,11 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <div className="hidden">
+        clerkLoaded: {String(clerkLoaded)} | clerkId: {String(clerkUser?.id)} |
+        appUserId: {String(user?.id)} | mode: {mode}
+      </div>
     </div>
   );
 }
