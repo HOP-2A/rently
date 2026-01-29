@@ -11,14 +11,11 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 
-type ListingApiKind =
-  | "RENT"
-  | "SELL"
-  | "SALE"
-  | "Sale"
-  | "sell"
-  | "rent"
-  | null;
+import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/providers/authProvider";
+
+type ListingKind = "RENT" | "SELL";
+type ListingApiKind = ListingKind | "SALE" | "Sale" | "sell" | "rent" | null;
 
 export type ListingFromApi = {
   id: string;
@@ -42,7 +39,6 @@ export type ListingFromApi = {
   type?: string | null;
 };
 
-type ListingKind = "RENT" | "SELL";
 type Listing = Omit<ListingFromApi, "kind"> & { kind: ListingKind };
 
 function normalizeKind(kind: ListingApiKind): ListingKind {
@@ -54,13 +50,12 @@ function normalizeKind(kind: ListingApiKind): ListingKind {
 
 type ActiveTab = "all" | "buy" | "rent";
 
-export default function App() {
+export default function Page() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [active, setActive] = useState<ActiveTab>("all");
   const [showFilters, setShowFilters] = useState(false);
-
   const [searchQuery, setSearchQuery] = useState("");
 
   const hasActiveFilters = active !== "all";
@@ -71,36 +66,74 @@ export default function App() {
     return "translate-x-0";
   }, [active]);
 
+  const { user: clerkUser } = useUser();
+  const auth = useAuth(clerkUser?.id);
+  const user = auth?.user;
+
   useEffect(() => {
-    const run = async () => {
+    if (!user?.id) {
+      setListings([]);
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchSaved = async () => {
       setLoading(true);
       try {
-        const res = await fetch("/api/getListning/saved", {
+        const res = await fetch(`/api/getListning/saved/${user.id}`, {
           cache: "no-store",
         });
-        if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+        if (!res.ok) throw new Error(`Fetch saved failed: ${res.status}`);
 
         const data: unknown = await res.json();
-        const safeArray: ListingFromApi[] = Array.isArray(data)
+        const arr: ListingFromApi[] = Array.isArray(data)
           ? (data as ListingFromApi[])
           : [];
 
-        const normalized: Listing[] = safeArray.map((l) => ({
+        const normalized: Listing[] = arr.map((l) => ({
           ...l,
           kind: normalizeKind(l.kind),
+          isSaved: true,
         }));
 
-        setListings(normalized);
+        if (!cancelled) setListings(normalized);
       } catch (e) {
         console.error(e);
-        setListings([]);
+        if (!cancelled) setListings([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    run();
-  }, []);
+    fetchSaved();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const removeSaved = async (listingId: string) => {
+    if (!user?.id) return;
+
+    const snapshot = listings;
+    setListings((prev) => prev.filter((l) => l.id !== listingId));
+
+    try {
+      const res = await fetch("/api/bookMark", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ listingId, renterId: user.id }),
+      });
+
+      if (!res.ok) throw new Error(`Unsave failed: ${res.status}`);
+    } catch (e) {
+      console.error(e);
+      setListings(snapshot);
+    }
+  };
 
   const filteredListings = useMemo(() => {
     let arr = listings;
@@ -117,51 +150,6 @@ export default function App() {
         l.title.toLowerCase().includes(q),
     );
   }, [listings, searchQuery, active]);
-
-  const toggleSaved = async (id: string) => {
-    const current = listings.find((x) => x.id === id);
-    const nextSaved = !(current?.isSaved ?? false);
-
-    setListings((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, isSaved: nextSaved } : l)),
-    );
-
-    try {
-      const res = await fetch(`/api/listing/${id}/saved`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isSaved: nextSaved }),
-      });
-
-      if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
-
-      const data: unknown = await res.json();
-      const parsed =
-        typeof data === "object" && data !== null
-          ? (data as { id?: unknown; isSaved?: unknown })
-          : {};
-
-      const returnedId = typeof parsed.id === "string" ? parsed.id : id;
-      const returnedSaved =
-        typeof parsed.isSaved === "boolean" ? parsed.isSaved : nextSaved;
-
-      setListings((prev) =>
-        prev.map((l) =>
-          l.id === returnedId ? { ...l, isSaved: returnedSaved } : l,
-        ),
-      );
-
-      if (!returnedSaved) {
-        setListings((prev) => prev.filter((l) => l.id !== returnedId));
-      }
-    } catch (e) {
-      console.error(e);
-
-      setListings((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, isSaved: !nextSaved } : l)),
-      );
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -241,7 +229,6 @@ export default function App() {
               </button>
             </div>
           </div>
-
 
           {showFilters && (
             <div className="lg:hidden pb-4">
@@ -331,7 +318,16 @@ export default function App() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-12">
-        {loading ? (
+        {!user?.id ? (
+          <div className="text-center py-20">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Login хийгээд хадгалсан заруудаа харна
+            </h3>
+            <p className="text-gray-500">
+              Clerk-ээр нэвтэрсний дараа энд харагдана.
+            </p>
+          </div>
+        ) : loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
@@ -350,23 +346,21 @@ export default function App() {
         ) : filteredListings.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bookmark
-                className={`w-5 h-5 transition-colors 
-
-                          ? "fill-blue-200 text-blue-500"
-                          : "text-gray-600"`}
-              />
+              <Bookmark className="w-5 h-5 text-blue-500 fill-blue-200" />
             </div>
+
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               {searchQuery.trim()
                 ? "Хайлтаар зар олдсонгүй"
                 : "Хадгалсан зар байхгүй байна"}
             </h3>
+
             <p className="text-gray-500 mb-6">
               {searchQuery.trim()
                 ? "Хайлтын үгээ өөрчилж үзнэ үү"
                 : "Та зар хадгалснаар энд харагдана"}
             </p>
+
             {!searchQuery.trim() && (
               <Link
                 href="/"
@@ -408,18 +402,13 @@ export default function App() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            toggleSaved(listing.id);
+                            removeSaved(listing.id);
                           }}
                           className="bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer"
-                          aria-label="Toggle saved"
+                          aria-label="Remove saved"
+                          title="Хадгалснаас устгах"
                         >
-                          <Bookmark
-                            className={`w-5 h-5 transition-colors ${
-                              listing.isSaved
-                                ? "fill-blue-200 text-blue-500"
-                                : "text-gray-600"
-                            }`}
-                          />
+                          <Bookmark className="w-5 h-5 fill-blue-200 text-blue-500" />
                         </button>
                       </div>
 

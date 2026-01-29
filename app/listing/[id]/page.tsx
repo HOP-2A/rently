@@ -4,6 +4,8 @@ import { Bookmark } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/providers/authProvider";
 
 export type OwnerFromApi = {
   id: string;
@@ -34,6 +36,7 @@ export type ListingFromApi = {
   photo?: string | null;
   image?: string | null;
   owner?: OwnerFromApi | null;
+
   kind: boolean;
 
   isSaved: boolean;
@@ -78,11 +81,8 @@ function StatusPill({ label, tone = "gray" }: { label: string; tone?: Tone }) {
 
 function maskPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
-
   if (digits.length < 8) return "****";
-
   const middleStart = Math.floor((digits.length - 4) / 2);
-
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
@@ -95,7 +95,13 @@ export default function Page() {
       : Array.isArray(rawId)
         ? rawId[0]
         : undefined;
+
   const { back } = useRouter();
+
+  const { user: clerkUser } = useUser();
+  const auth = useAuth(clerkUser?.id);
+  const user = auth?.user;
+
   const [listing, setListing] = useState<ListingFromApi | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -138,8 +144,23 @@ export default function Page() {
     return maskPhone(owner.phone);
   }, [owner?.phone, showPhone, agreedToPrivacy]);
 
+  const fetchIsSaved = async (userId: string, listingId: string) => {
+    const res = await fetch(`/api/getListning/saved/${userId}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return false;
+
+    const data: unknown = await res.json();
+    const arr: { id: string }[] = Array.isArray(data)
+      ? (data as { id: string }[])
+      : [];
+    return arr.some((x) => x.id === listingId);
+  };
+
   useEffect(() => {
     if (!id) return;
+
+    let cancelled = false;
 
     const run = async () => {
       setLoading(true);
@@ -152,18 +173,33 @@ export default function Page() {
         if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
 
         const data = (await res.json()) as ListingFromApi | null;
-        setListing(data);
+        if (!data) throw new Error("No listing data");
+
+        if (!cancelled) setListing(data);
+
+        if (user?.id) {
+          const saved = await fetchIsSaved(user.id, data.id);
+          if (!cancelled) {
+            setListing((prev) => (prev ? { ...prev, isSaved: saved } : prev));
+          }
+        }
       } catch (e) {
         console.error(e);
-        setListing(null);
-        setError(e instanceof Error ? e.message : "Unknown error");
+        if (!cancelled) {
+          setListing(null);
+          setError(e instanceof Error ? e.message : "Unknown error");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     run();
-  }, [id]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, user?.id]);
 
   const handleRevealPhone = () => {
     if (!agreedToPrivacy) setShowPrivacyModal(true);
@@ -178,29 +214,28 @@ export default function Page() {
 
   const toggleSaved = async () => {
     if (!listing || saving) return;
+    if (!user?.id) return;
 
-    const nextSaved = !listing.isSaved;
+    const prevSaved = Boolean(listing.isSaved);
+    const nextSaved = !prevSaved;
 
     setListing((prev) => (prev ? { ...prev, isSaved: nextSaved } : prev));
     setSaving(true);
 
     try {
-      const res = await fetch(`/api/listing/${listing.id}/saved`, {
-        method: "PATCH",
+      const method = nextSaved ? "POST" : "DELETE";
+
+      const res = await fetch("/api/bookMark", {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isSaved: nextSaved }),
+        cache: "no-store",
+        body: JSON.stringify({ renterId: user.id, listingId: listing.id }),
       });
 
-      if (!res.ok) throw new Error(`PATCH failed: ${res.status}`);
-
-      const data = (await res.json()) as { id: string; isSaved: boolean };
-
-      setListing((prev) =>
-        prev && prev.id === data.id ? { ...prev, isSaved: data.isSaved } : prev,
-      );
+      if (!res.ok) throw new Error(`${method} failed: ${res.status}`);
     } catch (e) {
       console.error(e);
-      setListing((prev) => (prev ? { ...prev, isSaved: !nextSaved } : prev));
+      setListing((prev) => (prev ? { ...prev, isSaved: prevSaved } : prev));
     } finally {
       setSaving(false);
     }
@@ -348,10 +383,13 @@ export default function Page() {
                       e.stopPropagation();
                       toggleSaved();
                     }}
-                    disabled={saving}
-                    className={`bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer ${
-                      saving ? "opacity-60 cursor-not-allowed" : ""
+                    disabled={saving || !user?.id}
+                    className={`bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
+                      saving || !user?.id
+                        ? "opacity-60 cursor-not-allowed"
+                        : "hover:cursor-pointer"
                     }`}
+                    title={!user?.id ? "Нэвтэрсний дараа хадгална" : undefined}
                   >
                     <Bookmark
                       className={`w-5 h-5 transition-colors ${
@@ -515,7 +553,9 @@ export default function Page() {
 
             <div className="border rounded-2xl p-4">
               <div className="text-xs text-gray-500 mb-1">Төрөл</div>
-              <div className="text-2xl font-semibold">{listing.kind}</div>
+              <div className="text-2xl font-semibold">
+                {String(listing.kind)}
+              </div>
             </div>
 
             <div className="border rounded-2xl p-4 sm:col-span-2">

@@ -47,6 +47,7 @@ model User {
   listings Listing[]
   rents    Rent[]
   reviews  Review[]
+  savedpost SavedPost[]
 }
 
 model Listing {
@@ -60,7 +61,7 @@ model Listing {
   address String
   price   Int
   kind    Kind    @default(RENT)
-  isSaved Boolean @default(false)
+
 
   rooms  Int?
   sizeM2 Int?
@@ -76,10 +77,26 @@ model Listing {
 
   rents   Rent[]
   reviews Review[]
+    savedpost SavedPost[]
 
   @@index([ownerId])
   @@index([status])
   @@index([isActive])
+}
+model SavedPost {
+  id String @id @default(nanoid())
+
+  renterId String
+  renter   User   @relation(fields: [renterId], references: [id], onDelete: Cascade)
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([renterId, listingId]) 
+  @@index([renterId])
+  @@index([listingId])
 }
 
 model Rent {
