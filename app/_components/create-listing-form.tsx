@@ -4,6 +4,8 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import PickLocationMapOSM from "./PickLocationMapOSM";
+
 import {
   Select,
   SelectContent,
@@ -24,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { useAuth } from "@/providers/authProvider";
+import PickLocationMap from "./PickLocationMap";
 
 interface FormData {
   title: string;
@@ -115,6 +118,14 @@ export function CreateListingForm() {
       toast.error("Enter the title");
       return;
     }
+    if (formData.lat == null || formData.lng == null) {
+      toast.error("Map дээр байрлал сонго (lat/lng хэрэгтэй)");
+      return;
+    }
+    if (formData.lat == null || formData.lng == null) {
+      toast.error("Map дээр байрлал сонго (lat/lng хэрэгтэй)");
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -148,7 +159,7 @@ export function CreateListingForm() {
       setIsLoading(false);
     }
   };
-
+  console.log(formData.lat, formData.lng);
   return (
     <div className="min-h-screen bg-[#f5f5f5] p-6 md:p-10">
       <div className="mx-auto max-w-6xl">
@@ -360,6 +371,92 @@ export function CreateListingForm() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                {/* <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">
+                    Pick location on map
+                  </Label>
+
+                  <PickLocationMap
+                    lat={formData.lat}
+                    lng={formData.lng}
+                    onPick={({ lat, lng }) => {
+                      setFormData((prev) => ({ ...prev, lat, lng }));
+                      toast.success(
+                        `Location set: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+                      );
+                    }}
+                  />
+
+                  <div className="text-sm text-gray-600">
+                    {formData.lat != null && formData.lng != null ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>
+                          Selected:{" "}
+                          <b>
+                            {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
+                          </b>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((p) => ({ ...p, lat: null, lng: null }))
+                          }
+                          className="text-red-600 hover:underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="opacity-70">
+                        Map дээр дарж pin тавиад координат сонго
+                      </span>
+                    )}
+                  </div>
+                </div> */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-gray-600">
+                    Pick location on map
+                  </Label>
+
+                  <PickLocationMapOSM
+                    lat={formData.lat}
+                    lng={formData.lng}
+                    onPick={({ lat, lng }) => {
+                      setFormData((prev) => ({ ...prev, lat, lng }));
+                      toast.success(
+                        `Location set: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+                      );
+                    }}
+                  />
+
+                  <div className="text-sm text-gray-600">
+                    {formData.lat != null && formData.lng != null ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span>
+                          Selected:{" "}
+                          <b>
+                            {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
+                          </b>
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((p) => ({ ...p, lat: null, lng: null }))
+                          }
+                          className="text-red-600 hover:underline"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="opacity-70">
+                        Map дээр дарж pin тавиад координат сонго
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex gap-4 pt-4">
