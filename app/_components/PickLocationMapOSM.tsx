@@ -53,7 +53,7 @@ export default function PickLocationMapOSM({ lat, lng, onPick }: Props) {
   }, [lat, lng, me]);
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border">
+    <div className="w-full overflow-hidden rounded-xl border relative z-10">
       <MapContainer
         center={center}
         zoom={lat != null && lng != null ? 16 : 13}
