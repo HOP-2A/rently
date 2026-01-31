@@ -1,11 +1,15 @@
 "use client";
 
-import { Bookmark } from "lucide-react";
 import Link from "next/link";
+import { Bookmark } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useAuth } from "@/providers/authProvider";
+
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker } from "react-leaflet";
 
 export type OwnerFromApi = {
   id: string;
@@ -18,6 +22,7 @@ export type OwnerFromApi = {
 };
 
 export type ListingStatus = "PENDING" | "ACTIVE" | "INACTIVE";
+export type ListingKind = "RENT" | "SALE";
 
 export type ListingFromApi = {
   id: string;
@@ -36,9 +41,7 @@ export type ListingFromApi = {
   photo?: string | null;
   image?: string | null;
   owner?: OwnerFromApi | null;
-
-  kind: boolean;
-
+  kind: ListingKind;
   isSaved: boolean;
 };
 
@@ -86,6 +89,17 @@ function maskPhone(phone: string): string {
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
+// ✅ Leaflet marker icon fix (Next.js дээр marker харагдахгүй асуудлыг засна)
+const DefaultIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
 export default function Page() {
   const params = useParams();
   const rawId = params?.id;
@@ -118,11 +132,6 @@ export default function Page() {
   }, [listing]);
 
   const owner = listing?.owner ?? null;
-
-  const mapsUrl =
-    listing?.lat != null && listing?.lng != null
-      ? `https://www.google.com/maps?q=${listing.lat},${listing.lng}`
-      : null;
 
   const statusTone: Tone = useMemo(() => {
     if (!listing) return "gray";
@@ -241,6 +250,21 @@ export default function Page() {
     }
   };
 
+  const hasCoords = listing?.lat != null && listing?.lng != null;
+
+  const osmUrl = hasCoords
+    ? `https://www.openstreetmap.org/?mlat=${listing!.lat}&mlon=${listing!.lng}#map=17/${listing!.lat}/${listing!.lng}`
+    : null;
+
+  const googleUrl = hasCoords
+    ? `https://www.google.com/maps?q=${listing!.lat},${listing!.lng}`
+    : null;
+
+  const center = useMemo<[number, number]>(() => {
+    if (hasCoords) return [listing!.lat!, listing!.lng!];
+    return [47.9186, 106.9176];
+  }, [hasCoords, listing?.lat, listing?.lng]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -349,7 +373,9 @@ export default function Page() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* TOP GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* IMAGE */}
           <div className="lg:col-span-2">
             <div className="bg-white border rounded-3xl overflow-hidden shadow-sm h-full">
               <div className="relative h-[500px]">
@@ -366,10 +392,8 @@ export default function Page() {
                 )}
 
                 <div className="absolute top-5 right-5">
-                  <div className="backdrop-blur bg-transparent text-gray-100 rounded-2xl px-5 py-3 shadow-lg">
-                    <div className="text-xs text-gray-200 font-medium">
-                      Үнэ:
-                    </div>
+                  <div className="backdrop-blur bg-black/35 text-white rounded-2xl px-5 py-3 shadow-lg">
+                    <div className="text-xs opacity-80 font-medium">Үнэ:</div>
                     <div className="text-3xl font-bold">
                       ₮{listing.price.toLocaleString()}
                     </div>
@@ -404,6 +428,7 @@ export default function Page() {
             </div>
           </div>
 
+          {/* CONTACT */}
           <div className="lg:col-span-1">
             <div className="bg-white border rounded-3xl p-6 shadow-sm lg:sticky lg:top-20">
               <div className="text-lg font-bold">Холбогдох</div>
@@ -499,6 +524,7 @@ export default function Page() {
           </div>
         </div>
 
+        {/* DETAILS CARD */}
         <div className="bg-white border rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
             <div className="flex-1">
@@ -509,19 +535,19 @@ export default function Page() {
             </div>
 
             <div className="flex gap-2 sm:flex-shrink-0">
-              {mapsUrl ? (
+              {googleUrl ? (
                 <a
-                  href={mapsUrl}
+                  href={googleUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="px-5 py-2.5 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold hover:cursor-pointer"
                 >
-                  Газрын зураг
+                  Google Maps
                 </a>
               ) : (
                 <button
                   disabled
-                  className="px-5 py-2.5 rounded-xl border bg-white text-sm font-semibold opacity-50 cursor-not-allowed "
+                  className="px-5 py-2.5 rounded-xl border bg-white text-sm font-semibold opacity-50 cursor-not-allowed"
                 >
                   Газрын зураггүй
                 </button>
@@ -553,17 +579,13 @@ export default function Page() {
 
             <div className="border rounded-2xl p-4">
               <div className="text-xs text-gray-500 mb-1">Төрөл</div>
-              <div className="text-2xl font-semibold">
-                {String(listing.kind)}
-              </div>
+              <div className="text-2xl font-semibold">{listing.kind}</div>
             </div>
 
             <div className="border rounded-2xl p-4 sm:col-span-2">
               <div className="text-xs text-gray-500 mb-1">Координат</div>
               <div className="text-lg font-semibold">
-                {listing.lat != null && listing.lng != null
-                  ? `${listing.lat}, ${listing.lng}`
-                  : "—"}
+                {hasCoords ? `${listing.lat}, ${listing.lng}` : "—"}
               </div>
             </div>
           </div>
@@ -575,6 +597,57 @@ export default function Page() {
           </div>
         </div>
 
+        {/* ✅ MAP CARD (OSM) */}
+        <div className="bg-white border rounded-3xl p-6 shadow-sm mb-6">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <div className="text-lg font-bold">Газрын зураг</div>
+              <div className="text-sm text-gray-500">
+                OpenStreetMap дээр координат харуулж байна
+              </div>
+            </div>
+
+            {googleUrl ? (
+              <a
+                href={googleUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2 rounded-xl border bg-white hover:bg-gray-50 text-sm font-semibold"
+              >
+                Томоор нээх
+              </a>
+            ) : null}
+          </div>
+
+          {!hasCoords ? (
+            <div className="text-sm text-gray-600">
+              Энэ зар дээр координат алга байна.
+            </div>
+          ) : (
+            <div className="w-full overflow-hidden rounded-2xl border">
+              <MapContainer
+                center={center}
+                zoom={16}
+                style={{ height: 520, width: "100%" }}
+                scrollWheelZoom
+              >
+                <TileLayer
+                  attribution="&copy; OpenStreetMap contributors"
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker position={center} title={listing.title} />
+              </MapContainer>
+            </div>
+          )}
+
+          {hasCoords && (
+            <div className="mt-2 text-xs text-gray-500">
+              {listing.lat!.toFixed(6)}, {listing.lng!.toFixed(6)}
+            </div>
+          )}
+        </div>
+
+        {/* DATA QUALITY */}
         <div className="bg-white border rounded-3xl p-6 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
@@ -589,7 +662,7 @@ export default function Page() {
                 <StatusPill label="Зураггүй" tone="yellow" />
               )}
 
-              {listing.lat != null && listing.lng != null ? (
+              {hasCoords ? (
                 <StatusPill label="Координат ✓" tone="green" />
               ) : (
                 <StatusPill label="Координатгүй" tone="yellow" />

@@ -2,8 +2,18 @@ import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const { ownerId, title, address, price, rooms, sizeM2, photo, kind } =
-    await req.json();
+  const {
+    ownerId,
+    title,
+    address,
+    price,
+    rooms,
+    sizeM2,
+    photo,
+    kind,
+    lng,
+    lat,
+  } = await req.json();
 
   const newPost = await prisma.listing.create({
     data: {
@@ -16,6 +26,8 @@ export async function POST(req: NextRequest) {
       sizeM2,
       status: "PENDING",
       kind,
+      lng,
+      lat,
     },
   });
 
