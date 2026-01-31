@@ -2,26 +2,59 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bookmark, Trash2, LogOut, UserRoundIcon } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { useAuth } from "@/providers/authProvider"; // <- adjust if your path differs
+import {
+  Home,
+  Bookmark,
+  UserRoundIcon,
+  Plus,
+  type LucideIcon,
+} from "lucide-react";
 
-const sidebarItems = [
+type SidebarItem = {
+  id: string;
+  href: string;
+  icon: LucideIcon;
+  landlordOnly?: boolean;
+  hideForLandlord?: boolean;
+};
+
+const sidebarItems: SidebarItem[] = [
   { id: "home", href: "/", icon: Home },
   { id: "profile", href: "/profile", icon: UserRoundIcon },
-  { id: "bookmark", href: "/bookmarks", icon: Bookmark },
+  { id: "bookmark", href: "/bookmarks", icon: Bookmark, hideForLandlord: true },
+  {
+    id: "add",
+    href: "/LandLord/createListing",
+    icon: Plus,
+    landlordOnly: true,
+  },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
+  const { user: clerkUser } = useUser();
+  const user2 = useAuth(clerkUser?.id);
+  const user = user2.user;
+
+  const isLandlord = user?.role === "LANDLORD";
+
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
-
     return pathname.startsWith(href);
   };
 
+  const visibleItems = sidebarItems.filter((item) => {
+    if (item.landlordOnly && !isLandlord) return false;
+    if (item.hideForLandlord && isLandlord) return false;
+    return true;
+  });
+
   return (
     <aside className="w-20 bg-white border-r flex flex-col items-center py-8 gap-6">
-      {sidebarItems.map((item) => {
+      {visibleItems.map((item) => {
         const active = isActive(item.href);
 
         return (
