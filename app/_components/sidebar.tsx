@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bookmark, Trash2, LogOut, UserRoundIcon } from "lucide-react";
+import { Home, Bookmark, UserRoundIcon } from "lucide-react";
 
 const sidebarItems = [
   { id: "home", href: "/", icon: Home },
