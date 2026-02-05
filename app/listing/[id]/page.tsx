@@ -10,6 +10,10 @@ import { useAuth } from "@/providers/authProvider";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import RentalRequestButton from "@/app/_components/RentalRequestButton";
+
+export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type ListingKind = "RENT" | "SALE" | "RENT" | "SALE" | "RENT" | "SALE";
 
 export type OwnerFromApi = {
   id: string;
@@ -21,8 +25,18 @@ export type OwnerFromApi = {
   role?: "RENTER" | "LANDLORD" | "ADMIN" | string;
 };
 
-export type ListingStatus = "PENDING" | "ACTIVE" | "INACTIVE";
-export type ListingKind = "RENT" | "SALE";
+export type ReviewFromApi = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+  user?: {
+    id: string;
+    username?: string | null;
+    name?: string | null;
+    avatar?: string | null;
+  } | null;
+};
 
 export type ListingFromApi = {
   id: string;
@@ -34,15 +48,26 @@ export type ListingFromApi = {
   sizeM2: number | null;
   lat: number | null;
   lng: number | null;
-  status: ListingStatus;
+
+  status: ApprovalStatus;
+
   isActive: boolean;
+
+  currentRenterId?: string | null;
+  currentRentId?: string | null;
+
   createdAt: string;
   updatedAt: string;
+
   photo?: string | null;
   image?: string | null;
+
   owner?: OwnerFromApi | null;
-  kind: ListingKind;
+
+  Kind: "SALE" | "RENT";
   isSaved: boolean;
+
+  reviews?: ReviewFromApi[];
 };
 
 type Tone = "gray" | "green" | "yellow" | "red" | "blue";
@@ -89,7 +114,6 @@ function maskPhone(phone: string): string {
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
-// ✅ Leaflet marker icon fix (Next.js дээр marker харагдахгүй асуудлыг засна)
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -136,11 +160,11 @@ export default function Page() {
   const statusTone: Tone = useMemo(() => {
     if (!listing) return "gray";
     switch (listing.status) {
-      case "ACTIVE":
+      case "APPROVED":
         return "green";
       case "PENDING":
         return "yellow";
-      case "INACTIVE":
+      case "REJECTED":
         return "red";
       default:
         return "gray";
@@ -152,6 +176,11 @@ export default function Page() {
     if (showPhone && agreedToPrivacy) return owner.phone;
     return maskPhone(owner.phone);
   }, [owner?.phone, showPhone, agreedToPrivacy]);
+
+  const isRented = useMemo(() => {
+    if (!listing) return false;
+    return listing.isActive === false || Boolean(listing.currentRentId);
+  }, [listing]);
 
   const fetchIsSaved = async (userId: string, listingId: string) => {
     const res = await fetch(`/api/getListning/saved/${userId}`, {
@@ -252,10 +281,6 @@ export default function Page() {
 
   const hasCoords = listing?.lat != null && listing?.lng != null;
 
-  const osmUrl = hasCoords
-    ? `https://www.openstreetmap.org/?mlat=${listing!.lat}&mlon=${listing!.lng}#map=17/${listing!.lat}/${listing!.lng}`
-    : null;
-
   const googleUrl = hasCoords
     ? `https://www.google.com/maps?q=${listing!.lat},${listing!.lng}`
     : null;
@@ -304,6 +329,15 @@ export default function Page() {
     );
   }
 
+  const reviews = listing.reviews ?? [];
+  const ratingAvg =
+    reviews.length > 0
+      ? Math.round(
+          (reviews.reduce((a, b) => a + (b.rating ?? 0), 0) / reviews.length) *
+            10,
+        ) / 10
+      : null;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {showPrivacyModal && (
@@ -351,31 +385,15 @@ export default function Page() {
         </div>
       )}
 
-      <div className="sticky top-0 z-10 bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
-          <div className="flex items-center justify-between gap-4">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-gray-50 hover:cursor-pointer"
-              onClick={() => back()}
-            >
-              ← Буцах
-            </div>
-
-            <div className="flex items-center gap-2">
-              <StatusPill label={listing.status} tone={statusTone} />
-              <StatusPill
-                label={listing.isActive ? "ИДЭВХИТЭЙ" : "ИДЭВХГҮЙ"}
-                tone={listing.isActive ? "green" : "gray"}
-              />
-            </div>
-          </div>
-        </div>
+      <div
+        className="inline-flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-gray-50 hover:cursor-pointer mt-10 ml-10 bg-white"
+        onClick={() => back()}
+      >
+        ← Буцах
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {/* TOP GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* IMAGE */}
           <div className="lg:col-span-2">
             <div className="bg-white border rounded-3xl overflow-hidden shadow-sm h-full">
               <div className="relative h-[500px]">
@@ -400,7 +418,7 @@ export default function Page() {
                   </div>
                 </div>
 
-                <div className="absolute top-5 left-5">
+                <div className="absolute top-5 left-5 flex items-center gap-2">
                   <button
                     onClick={(e) => {
                       e.preventDefault();
@@ -423,12 +441,20 @@ export default function Page() {
                       }`}
                     />
                   </button>
+
+                  <StatusPill label={listing.status} tone={statusTone} />
+                  <StatusPill
+                    label={listing.isActive ? "ИДЭВХИТЭЙ" : "ИДЭВХГҮЙ"}
+                    tone={listing.isActive ? "green" : "gray"}
+                  />
+                  {isRented ? (
+                    <StatusPill label="ТҮРЭЭССЭН" tone="red" />
+                  ) : null}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* CONTACT */}
           <div className="lg:col-span-1">
             <div className="bg-white border rounded-3xl p-6 shadow-sm lg:sticky lg:top-20">
               <div className="text-lg font-bold">Холбогдох</div>
@@ -495,6 +521,21 @@ export default function Page() {
                   </div>
                 </div>
 
+                {isRented ? (
+                  <div className="w-full px-4 py-3 rounded-xl font-semibold border bg-gray-50 text-gray-600">
+                    Энэ байр түрээслэгдсэн байна.
+                  </div>
+                ) : (
+                  <RentalRequestButton
+                    listingId={listing.id}
+                    landlordId={listing.ownerId}
+                    renterId={user?.id ?? ""}
+                    disabled={!user?.id}
+                    listingTitle={listing.title}
+                    defaultPhone={user?.phone ?? null}
+                  />
+                )}
+
                 <div className="border rounded-2xl p-4">
                   <div className="text-xs text-gray-500 mb-2">Имэйл</div>
                   <div className="font-semibold mb-3 text-sm truncate">
@@ -524,7 +565,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* DETAILS CARD */}
         <div className="bg-white border rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
             <div className="flex-1">
@@ -532,6 +572,18 @@ export default function Page() {
                 {listing.title}
               </h1>
               <p className="text-gray-600 text-lg">{listing.address}</p>
+
+              <div className="mt-3 flex items-center gap-2 text-sm">
+                <span className="font-semibold">Үнэлгээ:</span>
+                {ratingAvg == null ? (
+                  <span className="text-gray-500">Одоогоор үнэлгээ алга</span>
+                ) : (
+                  <>
+                    <span>⭐ {ratingAvg}/5</span>
+                    <span className="text-gray-500">({reviews.length})</span>
+                  </>
+                )}
+              </div>
             </div>
 
             <div className="flex gap-2 sm:flex-shrink-0">
@@ -579,14 +631,14 @@ export default function Page() {
 
             <div className="border rounded-2xl p-4">
               <div className="text-xs text-gray-500 mb-1">Төрөл</div>
-              <div className="text-2xl font-semibold">{listing.kind}</div>
+              <div className="text-2xl font-semibold">
+                {String(listing?.Kind)}
+              </div>
             </div>
 
-            <div className="border rounded-2xl p-4 sm:col-span-2">
-              <div className="text-xs text-gray-500 mb-1">Координат</div>
-              <div className="text-lg font-semibold">
-                {hasCoords ? `${listing.lat}, ${listing.lng}` : "—"}
-              </div>
+            <div className="border rounded-2xl p-4">
+              <div className="text-xs text-gray-500 mb-1">Статус</div>
+              <div className="text-2xl font-semibold">{listing.status}</div>
             </div>
           </div>
 
@@ -597,7 +649,56 @@ export default function Page() {
           </div>
         </div>
 
-        {/* ✅ MAP CARD (OSM) */}
+        <div className="bg-white border rounded-3xl p-6 sm:p-8 shadow-sm mb-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="text-lg font-bold">Сэтгэгдэл</div>
+              <div className="text-sm text-gray-500">
+                Энэ зар дээрх түрээслэгчдийн үнэлгээ
+              </div>
+            </div>
+
+            <div className="text-sm font-semibold">
+              {ratingAvg == null ? "—" : `⭐ ${ratingAvg}/5`}{" "}
+              <span className="text-gray-500">({reviews.length})</span>
+            </div>
+          </div>
+
+          {reviews.length === 0 ? (
+            <div className="mt-4 text-sm text-gray-500">
+              Одоогоор сэтгэгдэл алга байна.
+            </div>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {reviews.map((rv) => {
+                const name = rv.user?.username ?? rv.user?.name ?? "User";
+                return (
+                  <div key={rv.id} className="border rounded-2xl p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-semibold truncate">{name}</div>
+                      <div className="text-sm">⭐ {rv.rating}/5</div>
+                    </div>
+
+                    {rv.comment ? (
+                      <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">
+                        {rv.comment}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 mt-2">
+                        (Сэтгэгдэл бичээгүй)
+                      </div>
+                    )}
+
+                    <div className="text-xs text-gray-500 mt-2">
+                      {formatDate(rv.createdAt)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <div className="bg-white border rounded-3xl p-6 shadow-sm mb-6">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
@@ -647,7 +748,6 @@ export default function Page() {
           )}
         </div>
 
-        {/* DATA QUALITY */}
         <div className="bg-white border rounded-3xl p-6 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>

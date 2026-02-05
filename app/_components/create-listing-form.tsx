@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { useAuth } from "@/providers/authProvider";
 import PickLocationMap from "./PickLocationMap";
+import { useRouter } from "next/navigation";
 
 interface FormData {
   title: string;
@@ -61,6 +62,7 @@ export function CreateListingForm() {
   const userData = useAuth(clerkUser?.id);
   const user = userData?.user;
   const ALL = "All";
+  const { push } = useRouter();
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -148,6 +150,7 @@ export function CreateListingForm() {
 
       if (response.ok) {
         toast.success("Saved Successfully");
+        push("/");
         resetForm();
       } else {
         toast.error("Something went wrong");
@@ -159,7 +162,9 @@ export function CreateListingForm() {
       setIsLoading(false);
     }
   };
-  console.log(formData.lat, formData.lng);
+  if (user?.role === "RENTER") {
+    push("/");
+  }
   return (
     <div className="min-h-screen bg-[#f5f5f5] p-6 md:p-10">
       <div className="mx-auto max-w-6xl">

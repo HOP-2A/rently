@@ -28,6 +28,13 @@ enum RentStatus {
   ENDED
 }
 
+enum RentalRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELED
+}
+
 model User {
   id       String @id @default(nanoid())
   clerkId  String @unique
@@ -44,24 +51,33 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  listings Listing[]
-  rents    Rent[]
-  reviews  Review[]
+  listings Listing[] @relation("OwnerListings")
+
+  rents   Rent[]
+  reviews Review[]
+
   savedpost SavedPost[]
+
+  rentalRequestsSent     RentalRequest[] @relation("RentalRequestsSent")
+  rentalRequestsReceived RentalRequest[] @relation("RentalRequestsReceived")
+
+  currentRentedListings Listing[] @relation("CurrentRenter")
+
+  @@index([clerkId])
+  @@index([role])
 }
 
 model Listing {
   id String @id @default(nanoid())
 
   ownerId String
-  owner   User   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner   User   @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: Cascade)
 
   photo   String
   title   String
   address String
   price   Int
-  kind    Kind    @default(RENT)
-
+  kind    Kind   @default(RENT)
 
   rooms  Int?
   sizeM2 Int?
@@ -72,17 +88,28 @@ model Listing {
   status   ApprovalStatus @default(PENDING)
   isActive Boolean        @default(true)
 
+  currentRenterId String?
+  currentRenter   User?   @relation("CurrentRenter", fields: [currentRenterId], references: [id], onDelete: SetNull)
+
+  currentRentId String? @unique
+  currentRent   Rent?   @relation("CurrentRent", fields: [currentRentId], references: [id], onDelete: SetNull)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  rents   Rent[]
-  reviews Review[]
-    savedpost SavedPost[]
+  rents Rent[] @relation("RentListing")
+
+  reviews        Review[]
+  savedpost      SavedPost[]
+  rentalRequests RentalRequest[]
 
   @@index([ownerId])
   @@index([status])
   @@index([isActive])
+  @@index([currentRenterId])
+  @@index([kind])
 }
+
 model SavedPost {
   id String @id @default(nanoid())
 
@@ -94,7 +121,7 @@ model SavedPost {
 
   createdAt DateTime @default(now())
 
-  @@unique([renterId, listingId]) 
+  @@unique([renterId, listingId])
   @@index([renterId])
   @@index([listingId])
 }
@@ -103,7 +130,7 @@ model Rent {
   id String @id @default(nanoid())
 
   listingId String
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  listing   Listing @relation("RentListing", fields: [listingId], references: [id], onDelete: Cascade)
 
   renterId String
   renter   User   @relation(fields: [renterId], references: [id], onDelete: Cascade)
@@ -113,12 +140,19 @@ model Rent {
   startAt DateTime  @default(now())
   endAt   DateTime?
 
+  rentalRequestId String?        @unique
+  rentalRequest   RentalRequest? @relation(fields: [rentalRequestId], references: [id], onDelete: SetNull)
+
+  currentForListing Listing? @relation("CurrentRent")
+
   createdAt DateTime @default(now())
-  reviews   Review[]
+
+  reviews Review[]
 
   @@index([listingId])
   @@index([renterId])
   @@index([status])
+  @@index([startAt])
 }
 
 model Review {
@@ -130,15 +164,50 @@ model Review {
   listingId String
   listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
-  rentId String?
-  rent   Rent?   @relation(fields: [rentId], references: [id], onDelete: SetNull)
+  rentId String
+  rent   Rent   @relation(fields: [rentId], references: [id], onDelete: Cascade)
 
   rating  Int
   comment String?
 
   createdAt DateTime @default(now())
 
+  @@unique([userId, rentId])
   @@index([userId])
   @@index([listingId])
   @@index([rentId])
+}
+
+model RentalRequest {
+  id String @id @default(nanoid())
+
+  listingId String
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  landlordId String
+  landlord   User   @relation("RentalRequestsReceived", fields: [landlordId], references: [id], onDelete: Cascade)
+
+  renterId String
+  renter   User   @relation("RentalRequestsSent", fields: [renterId], references: [id], onDelete: Cascade)
+
+  message        String
+  phone          String?
+  moveInDate     DateTime?
+  durationMonths Int?
+
+  status RentalRequestStatus @default(PENDING)
+
+  decidedAt    DateTime?
+  decisionNote String?
+
+  rent Rent?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([listingId])
+  @@index([landlordId])
+  @@index([renterId])
+  @@index([status])
+  @@index([createdAt])
 }
