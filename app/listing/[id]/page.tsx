@@ -139,7 +139,7 @@ export default function Page() {
   const { user: clerkUser } = useUser();
   const auth = useAuth(clerkUser?.id);
   const user = auth?.user;
-
+  const router = useRouter();
   const [listing, setListing] = useState<ListingFromApi | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
@@ -459,7 +459,10 @@ export default function Page() {
             <div className="bg-white border rounded-3xl p-6 shadow-sm lg:sticky lg:top-20">
               <div className="text-lg font-bold">Холбогдох</div>
 
-              <div className="mt-5 flex items-center gap-4">
+              <div
+                className="mt-5 flex items-center gap-4"
+                onClick={() => router.push(`/user/${owner?.id}`)}
+              >
                 <div className="w-16 h-16 rounded-2xl border flex items-center justify-center overflow-hidden bg-gray-50">
                   {owner?.avatar ? (
                     <img
@@ -551,15 +554,6 @@ export default function Page() {
                     Имэйл илгээх
                   </a>
                 </div>
-
-                {owner?.about && (
-                  <div className="border rounded-2xl p-4">
-                    <div className="text-xs text-gray-500 mb-2">Тухай</div>
-                    <div className="text-sm text-gray-700 leading-relaxed">
-                      {owner.about}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

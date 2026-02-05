@@ -162,9 +162,12 @@ export function CreateListingForm() {
       setIsLoading(false);
     }
   };
+<<<<<<< HEAD
   if (user?.role === "RENTER") {
     push("/");
   }
+=======
+>>>>>>> 54ca8b4 (now logged user can see other user's profile)
   return (
     <div className="min-h-screen bg-[#f5f5f5] p-6 md:p-10">
       <div className="mx-auto max-w-6xl">
