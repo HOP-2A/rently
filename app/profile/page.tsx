@@ -25,6 +25,12 @@ type Role = "RENTER" | "LANDLORD";
 type ListingKind = "RENT" | "SELL";
 type ListingApiKind = ListingKind | "SALE" | "Sale" | "sell" | "rent" | null;
 
+type RentalRequestMini = {
+  id: string;
+  status: "PENDING" | "ACCEPTED" | "REJECTED";
+  createdAt: string;
+};
+
 export type ListingFromApi = {
   id: string;
   ownerId: string;
@@ -35,7 +41,9 @@ export type ListingFromApi = {
   sizeM2: number | null;
   lat: number | null;
   lng: number | null;
+
   status: "PENDING" | "APPROVED" | "REJECTED";
+
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -45,6 +53,8 @@ export type ListingFromApi = {
   rating?: number | null;
   image?: string | null;
   type?: string | null;
+
+  rentalRequests?: RentalRequestMini[];
 };
 
 type Listing = Omit<ListingFromApi, "kind"> & { kind: ListingKind };
@@ -97,7 +107,12 @@ function ListingCard({
   rightAction?: React.ReactNode;
 }) {
   const photo = String(listing.photo ?? listing.image ?? "").trim();
-  const rating = typeof listing.rating === "number" ? listing.rating : 4.8;
+
+  const reqs = listing.rentalRequests ?? [];
+  const totalReq = reqs.length;
+  const pendingCount = reqs.filter((r) => r.status === "PENDING").length;
+  const acceptedCount = reqs.filter((r) => r.status === "ACCEPTED").length;
+  const rejectedCount = reqs.filter((r) => r.status === "REJECTED").length;
 
   return (
     <Link href={`/listing/${listing.id}`} className="block group">
@@ -134,6 +149,14 @@ function ListingCard({
               {listing.kind === "RENT" ? "Түрээс" : "Зарах"}
             </span>
           </div>
+
+          {totalReq > 0 && (
+            <div className="absolute bottom-3 right-3">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 backdrop-blur border">
+                Requests {totalReq}
+              </span>
+            </div>
+          )}
         </div>
 
         <div className="p-5">
@@ -146,10 +169,6 @@ function ListingCard({
                 {listing.kind === "RENT" ? "сар бүр" : "нийт үнэ"}
               </p>
             </div>
-            <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-lg">
-              <span className="text-amber-500">⭐</span>
-              <span className="font-semibold text-sm">{rating.toFixed(1)}</span>
-            </div>
           </div>
 
           <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors">
@@ -159,6 +178,30 @@ function ListingCard({
           <p className="text-sm text-gray-600 mb-3 line-clamp-2">
             {listing.address}
           </p>
+
+          <div className="flex flex-wrap gap-2 mb-3">
+            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border">
+              Requests: {totalReq}
+            </span>
+
+            {pendingCount > 0 && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                Pending {pendingCount}
+              </span>
+            )}
+
+            {acceptedCount > 0 && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                Accepted {acceptedCount}
+              </span>
+            )}
+
+            {rejectedCount > 0 && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
+                Rejected {rejectedCount}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t">
             {listing.rooms != null && (
@@ -371,72 +414,95 @@ export default function ProfilePage() {
       ) : role === "RENTER" ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-            <aside className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-              <div className="p-5 border-b">
+            <aside className="relative overflow-hidden rounded-3xl border bg-white shadow-[0_10px_35px_-20px_rgba(0,0,0,0.35)]">
+              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-500 rounded-b-2xl" />
+              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-2xl" />
+              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+
+              <div className="relative p-5 pt-6">
                 <div className="flex items-start gap-4">
                   <div className="shrink-0">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
                         alt="avatar"
-                        className="w-14 h-14 rounded-2xl object-cover border"
+                        className="h-16 w-16 rounded-2xl object-cover ring-4 ring-white/70 shadow-md"
                       />
                     ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100 border grid place-items-center font-bold text-gray-600">
+                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/90 font-extrabold text-gray-900 ring-4 ring-white/70 shadow-md">
                         {initials(displayName)}
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex gap-7">
-                      <p className="text-lg font-bold text-gray-900 truncate">
-                        {displayName}
-                      </p>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-extrabold text-white drop-shadow-sm">
+                          {displayName}
+                        </p>
+                        <p className="truncate text-sm text-white/90">
+                          @{user?.username ?? clerkUser?.username ?? "—"}
+                        </p>
+                      </div>
+
                       <Button
-                        variant={"destructive"}
-                        className=" hover:cursor-pointer w-15 h-8"
+                        variant="secondary"
+                        className="h-9 rounded-xl bg-white/95 text-gray-900 shadow-sm hover:bg-white hover:cursor-pointer"
                         onClick={() => logout()}
                       >
                         Logout
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {user?.username ?? clerkUser?.username ?? "—"}
-                    </p>
 
-                    <span className="inline-flex mt-3 px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 border border-teal-200">
-                      RENTER
-                    </span>
+                    <div className="mt-4 flex flex-wrap items-center gap-2 ">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
+                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                        {user?.role ?? "RENTER"}
+                      </span>
+
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
+                        <span className="h-2 w-2 rounded-full bg-yellow-300" />
+                        Verified
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="p-5">
-                <InfoRow
-                  icon={<UserIcon className="w-4 h-4" />}
-                  label="Name"
-                  value={user?.name}
-                />
-                <InfoRow
-                  icon={<Mail className="w-4 h-4" />}
-                  label="Email"
-                  value={
-                    user?.email ??
-                    clerkUser?.primaryEmailAddress?.emailAddress ??
-                    ""
-                  }
-                />
-                <InfoRow
-                  icon={<Phone className="w-4 h-4" />}
-                  label="Phone"
-                  value={user?.phone}
-                />
-                <InfoRow
-                  icon={<Info className="w-4 h-4" />}
-                  label="About"
-                  value={user?.about}
-                />
+                <div className="rounded-2xl border bg-white p-4 shadow-sm">
+                  <InfoRow
+                    icon={<UserIcon className="h-4 w-4" />}
+                    label="Name"
+                    value={user?.name}
+                  />
+                  <InfoRow
+                    icon={<Mail className="h-4 w-4" />}
+                    label="Email"
+                    value={
+                      user?.email ??
+                      clerkUser?.primaryEmailAddress?.emailAddress ??
+                      ""
+                    }
+                  />
+                  <InfoRow
+                    icon={<Phone className="h-4 w-4" />}
+                    label="Phone"
+                    value={user?.phone}
+                  />
+                  <InfoRow
+                    icon={<Info className="h-4 w-4" />}
+                    label="About"
+                    value={user?.about}
+                  />
+                </div>
+
+                <Link href="/profile/rental-history" className="mt-4 block">
+                  <Button className="h-11 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-md hover:opacity-95">
+                    Rental History →
+                  </Button>
+                </Link>
               </div>
             </aside>
 
@@ -579,81 +645,107 @@ export default function ProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 ">
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 ">
-            <aside className="bg-white rounded-2xl border shadow-sm overflow-hidden h-110">
-              <div className="p-5 border-b">
-                <div className="flex items-start gap-4 ">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
+            {/* LANDLORD SIDEBAR - FIRE */}
+            <aside className="relative overflow-hidden rounded-3xl border bg-white shadow-[0_10px_35px_-20px_rgba(0,0,0,0.35)]">
+              {/* gradient header */}
+              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-b-2xl" />
+              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-2xl" />
+              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+
+              <div className="relative p-5 pt-6">
+                <div className="flex items-start gap-4">
                   <div className="shrink-0">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
                         alt="avatar"
-                        className="w-14 h-14 rounded-2xl object-cover border"
+                        className="h-16 w-16 rounded-2xl object-cover ring-4 ring-white/70 shadow-md"
                       />
                     ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-gray-100 border grid place-items-center font-bold text-gray-600">
+                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/90 font-extrabold text-gray-900 ring-4 ring-white/70 shadow-md">
                         {initials(displayName)}
                       </div>
                     )}
                   </div>
 
-                  <div className="min-w-0 flex-1 ">
-                    <div className="flex gap-7">
-                      <p className="text-lg font-bold text-gray-900 truncate">
-                        {displayName}
-                      </p>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-lg font-extrabold text-white drop-shadow-sm">
+                          {displayName}
+                        </p>
+                        <p className="truncate text-sm text-white/90">
+                          @{user?.username ?? clerkUser?.username ?? "—"}
+                        </p>
+                      </div>
+
                       <Button
-                        variant={"destructive"}
-                        className=" hover:cursor-pointer w-15 h-8"
+                        variant="secondary"
+                        className="h-9 rounded-xl bg-white/95 text-gray-900 shadow-sm hover:bg-white hover:cursor-pointer"
                         onClick={() => logout()}
                       >
                         Logout
                       </Button>
                     </div>
-                    <p className="text-sm text-gray-500 truncate">
-                      {user?.username ?? clerkUser?.username ?? "—"}
-                    </p>
 
-                    <span className="inline-flex mt-3 px-3 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700 border border-teal-200">
-                      LANDLORD
-                    </span>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
+                        <span className="h-2 w-2 rounded-full bg-amber-300" />
+                        LANDLORD
+                      </span>
+
+                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
+                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
+                        Active
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5 ">
-                <InfoRow
-                  icon={<UserIcon className="w-4 h-4" />}
-                  label="Name"
-                  value={user?.name}
-                />
-                <InfoRow
-                  icon={<Mail className="w-4 h-4" />}
-                  label="Email"
-                  value={
-                    user?.email ??
-                    clerkUser?.primaryEmailAddress?.emailAddress ??
-                    ""
-                  }
-                />
-                <InfoRow
-                  icon={<Phone className="w-4 h-4" />}
-                  label="Phone"
-                  value={user?.phone}
-                />
-                <InfoRow
-                  icon={<Info className="w-4 h-4" />}
-                  label="About"
-                  value={user?.about}
-                />
+              <div className="p-5">
+                <div className="rounded-2xl border bg-white p-4 shadow-sm">
+                  <InfoRow
+                    icon={<UserIcon className="h-4 w-4" />}
+                    label="Name"
+                    value={user?.name}
+                  />
+                  <InfoRow
+                    icon={<Mail className="h-4 w-4" />}
+                    label="Email"
+                    value={
+                      user?.email ??
+                      clerkUser?.primaryEmailAddress?.emailAddress ??
+                      ""
+                    }
+                  />
+                  <InfoRow
+                    icon={<Phone className="h-4 w-4" />}
+                    label="Phone"
+                    value={user?.phone}
+                  />
+                  <InfoRow
+                    icon={<Info className="h-4 w-4" />}
+                    label="About"
+                    value={user?.about}
+                  />
+                </div>
+
+                <Link href="/LandLord/createListing" className="mt-4 block">
+                  <Button className="h-11 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-md hover:opacity-95">
+                    + Create New Listing
+                  </Button>
+                </Link>
               </div>
             </aside>
 
-            <section className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+            {/* LANDLORD MAIN - FIRE */}
+            <section className="bg-white rounded-3xl border shadow-sm overflow-hidden">
               <div className="p-5 border-b flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-md">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-md">
                     <Home className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -668,26 +760,37 @@ export default function ProfilePage() {
 
                 <Link
                   href="/LandLord/createListing"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-md hover:opacity-95 transition"
                 >
                   <Plus className="w-4 h-4" />
                   New listing
                 </Link>
               </div>
 
-              <div className="p-4 border-b flex items-center justify-between gap-3">
-                <div className="hidden md:block relative">
+              {/* toolbar */}
+              <div className="p-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="relative w-full md:max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Хайх..."
+                    placeholder="Зар хайх (title / address)..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 pr-4 py-2 border rounded-xl w-80 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full pl-10 pr-10 py-2.5 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50"
                   />
+                  {searchQuery.trim() && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-gray-200 transition"
+                      aria-label="Clear search"
+                      title="Хайлт цэвэрлэх"
+                    >
+                      <X className="w-4 h-4 text-gray-600" />
+                    </button>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between md:justify-end gap-3">
                   <p className="text-sm text-gray-600">
                     <span className="font-semibold text-gray-900">
                       {filtered.length}
@@ -698,18 +801,19 @@ export default function ProfilePage() {
                   {searchQuery.trim() && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:cursor-pointer rounded-xl bg-blue-100 px-3 py-1.5 hover:bg-blue-200 transition-colors"
+                      className="text-sm font-medium flex items-center gap-1 rounded-2xl bg-teal-50 px-3 py-2 text-teal-700 hover:bg-teal-100 transition hover:cursor-pointer border"
                     >
                       <X className="w-4 h-4" />
-                      Хайлт цэвэрлэх
+                      Цэвэрлэх
                     </button>
                   )}
                 </div>
               </div>
 
+              {/* content */}
               <div className="p-5">
                 {loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                       <div
                         key={i}
@@ -739,15 +843,16 @@ export default function ProfilePage() {
 
                     {!searchQuery.trim() && (
                       <Link
-                        href="/create"
-                        className="inline-block px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
+                        href="/LandLord/createListing"
+                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-md hover:opacity-95 transition"
                       >
+                        <Plus className="w-4 h-4" />
                         Зар нэмэх
                       </Link>
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filtered.map((listing) => (
                       <ListingCard key={listing.id} listing={listing} />
                     ))}

@@ -252,6 +252,10 @@ export default function App() {
   const filteredListings = useMemo(() => {
     let filtered = [...listings];
 
+    if (user?.id) {
+      filtered = filtered.filter((l) => l.ownerId !== user.id);
+    }
+
     if (active === "rent") filtered = filtered.filter((l) => l.kind === "RENT");
     if (active === "buy") filtered = filtered.filter((l) => l.kind === "SELL");
 
@@ -318,6 +322,7 @@ export default function App() {
     sizeRange,
     searchQuery,
     location,
+    user?.id,
   ]);
 
   const pillClass =
@@ -574,8 +579,6 @@ export default function App() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredListings.map((listing) => {
               const photo = String(listing.photo ?? listing.image ?? "").trim();
-              const rating =
-                typeof listing.rating === "number" ? listing.rating : 4.8;
 
               return (
                 <Link
@@ -658,12 +661,6 @@ export default function App() {
                           <p className="text-xs text-gray-500 mt-0.5">
                             {listing.kind === "RENT" ? "сар бүр" : "нийт үнэ"}
                           </p>
-                        </div>
-                        <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-lg">
-                          <span className="text-amber-500">⭐</span>
-                          <span className="font-semibold text-sm">
-                            {rating.toFixed(1)}
-                          </span>
                         </div>
                       </div>
 

@@ -10,6 +10,7 @@ import {
   UserRoundIcon,
   Plus,
   type LucideIcon,
+  Album,
 } from "lucide-react";
 
 type SidebarItem = {
@@ -30,6 +31,7 @@ const sidebarItems: SidebarItem[] = [
     icon: Plus,
     landlordOnly: true,
   },
+  { id: "album", href: "/rentalRequest", icon: Album, landlordOnly: true },
 ];
 
 export default function Sidebar() {
