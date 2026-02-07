@@ -1,10 +1,15 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+type RequestType = "RENT_REQUEST" | "BUY_REQUEST";
+
 type Body = {
   listingId: string;
   landlordId: string;
   renterId: string;
+
+  type: RequestType;
+
   message: string;
   moveInDate?: string | null;
   durationMonths?: number | null;
@@ -15,11 +20,14 @@ function isBody(x: unknown): x is Body {
   if (typeof x !== "object" || x === null) return false;
   const r = x as Record<string, unknown>;
 
+  const typeOk = r.type === "RENT_REQUEST" || r.type === "BUY_REQUEST";
+
   return (
     typeof r.listingId === "string" &&
     typeof r.landlordId === "string" &&
     typeof r.renterId === "string" &&
     typeof r.message === "string" &&
+    typeOk &&
     (r.moveInDate === undefined ||
       r.moveInDate === null ||
       typeof r.moveInDate === "string") &&
@@ -32,10 +40,8 @@ function isBody(x: unknown): x is Body {
 
 function parseDateOnlyToUTC(dateOnly: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return null;
-
   const d = new Date(`${dateOnly}T00:00:00.000Z`);
   if (Number.isNaN(d.getTime())) return null;
-
   return d;
 }
 
@@ -70,27 +76,6 @@ export async function POST(req: Request) {
       );
     }
 
-    let moveIn: Date | null = null;
-    if (raw.moveInDate) {
-      const parsed = parseDateOnlyToUTC(raw.moveInDate);
-      if (!parsed) {
-        return NextResponse.json(
-          { ok: false, error: "Invalid moveInDate. Use YYYY-MM-DD." },
-          { status: 400 },
-        );
-      }
-      moveIn = parsed;
-    }
-
-    const duration =
-      raw.durationMonths == null ? null : Math.trunc(raw.durationMonths);
-    if (duration != null && (!Number.isFinite(duration) || duration <= 0)) {
-      return NextResponse.json(
-        { ok: false, error: "Invalid durationMonths" },
-        { status: 400 },
-      );
-    }
-
     const phone = raw.phone == null ? null : (digits8(raw.phone) ?? null);
     if (raw.phone != null && phone == null) {
       return NextResponse.json(
@@ -99,11 +84,51 @@ export async function POST(req: Request) {
       );
     }
 
+    const isRent = raw.type === "RENT_REQUEST";
+
+    let moveIn: Date | null = null;
+    let duration: number | null = null;
+
+    if (isRent) {
+      if (!raw.moveInDate) {
+        return NextResponse.json(
+          { ok: false, error: "moveInDate is required for rent request" },
+          { status: 400 },
+        );
+      }
+      const parsed = parseDateOnlyToUTC(raw.moveInDate);
+      if (!parsed) {
+        return NextResponse.json(
+          { ok: false, error: "Invalid moveInDate. Use YYYY-MM-DD." },
+          { status: 400 },
+        );
+      }
+      moveIn = parsed;
+
+      if (raw.durationMonths == null) {
+        return NextResponse.json(
+          { ok: false, error: "durationMonths is required for rent request" },
+          { status: 400 },
+        );
+      }
+      duration = Math.trunc(raw.durationMonths);
+      if (!Number.isFinite(duration) || duration <= 0) {
+        return NextResponse.json(
+          { ok: false, error: "Invalid durationMonths" },
+          { status: 400 },
+        );
+      }
+    } else {
+      moveIn = null;
+      duration = null;
+    }
+
     const created = await prisma.rentalRequest.create({
       data: {
         listingId: raw.listingId,
         landlordId: raw.landlordId,
         renterId: raw.renterId,
+        type: raw.type,
         message,
         moveInDate: moveIn,
         durationMonths: duration,

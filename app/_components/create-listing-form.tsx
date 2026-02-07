@@ -22,6 +22,10 @@ import {
   Upload,
   X,
   Loader2,
+  Home,
+  Bed,
+  Maximize,
+  DollarSign,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
@@ -63,17 +67,18 @@ export function CreateListingForm() {
   const user = userData?.user;
   const ALL = "All";
   const { push } = useRouter();
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Only choose photo");
+      toast.error("Зөвхөн зураг сонгоно уу");
       return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("The photos size should be 5MB or less");
+      toast.error("Зургийн хэмжээ 5MB-аас бага байх ёстой");
       return;
     }
 
@@ -91,10 +96,10 @@ export function CreateListingForm() {
 
       const data = await response.json();
       setFormData((prev) => ({ ...prev, photo: data.url }));
-      toast.success("Photo uploaded successfully");
+      toast.success("Зураг амжилттай хуулагдлаа");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Something went wrong while uploading photo");
+      toast.error("Зураг хуулахад алдаа гарлаа");
     } finally {
       setIsUploading(false);
     }
@@ -113,19 +118,15 @@ export function CreateListingForm() {
 
   const handleSubmit = async () => {
     if (!formData.photo) {
-      toast.error("Enter the photo");
+      toast.error("Зураг оруулна уу");
       return;
     }
     if (!formData.title) {
-      toast.error("Enter the title");
+      toast.error("Гарчиг оруулна уу");
       return;
     }
     if (formData.lat == null || formData.lng == null) {
-      toast.error("Map дээр байрлал сонго (lat/lng хэрэгтэй)");
-      return;
-    }
-    if (formData.lat == null || formData.lng == null) {
-      toast.error("Map дээр байрлал сонго (lat/lng хэрэгтэй)");
+      toast.error("Газрын зураг дээр байршил сонгоно уу");
       return;
     }
 
@@ -149,149 +150,197 @@ export function CreateListingForm() {
       });
 
       if (response.ok) {
-        toast.success("Saved Successfully");
+        toast.success("Амжилттай хадгалагдлаа");
         push("/");
         resetForm();
       } else {
-        toast.error("Something went wrong");
+        toast.error("Алдаа гарлаа");
       }
     } catch (error) {
       console.error("Error:", error);
-      toast.error("Something went wrong");
+      toast.error("Алдаа гарлаа");
     } finally {
       setIsLoading(false);
     }
   };
+
   if (user?.role === "RENTER") {
     push("/");
   }
-  return (
-    <div className="min-h-screen bg-[#f5f5f5] p-6 md:p-10">
-      <div className="mx-auto max-w-6xl">
-        <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
-          <div>
-            <h1 className="mb-6 text-2xl font-bold text-foreground">
-              Create New Listing
-            </h1>
 
-            <Card className="bg-white p-6">
-              <h2 className="mb-6 text-lg font-semibold text-foreground">
-                Write your details here
-              </h2>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50/30 p-4 md:p-8">
+      <div className="mx-auto max-w-7xl">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Шинэ зар нэмэх
+          </h1>
+          <p className="text-gray-600">
+            Өөрийн үл хөдлөх хөрөнгийн мэдээллийг оруулна уу
+          </p>
+        </div>
+
+        <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
+          {/* Main Form */}
+          <div className="space-y-6">
+            {/* Photo Upload Card */}
+            <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-teal-100 rounded-xl">
+                  <Upload className="w-5 h-5 text-teal-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Зураг</h2>
+                  <p className="text-sm text-gray-500">
+                    Өндөр чанарын зураг оруулна уу
+                  </p>
+                </div>
+              </div>
+
+              {formData.photo ? (
+                <div className="relative inline-block w-full">
+                  <img
+                    src={formData.photo}
+                    alt="Uploaded preview"
+                    className="h-64 w-full rounded-2xl object-cover border-2 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="absolute -right-3 -top-3 rounded-full bg-gradient-to-br from-red-500 to-red-600 p-2.5 text-white hover:from-red-600 hover:to-red-700 shadow-lg shadow-red-500/30 transition-all hover:scale-110"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <label
+                  className={`flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-teal-50 hover:to-teal-100/50 hover:border-teal-400 transition-all ${
+                    isUploading ? "pointer-events-none opacity-50" : ""
+                  }`}
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center">
+                      <Loader2 className="h-12 w-12 animate-spin text-teal-600" />
+                      <span className="mt-3 text-base font-medium text-gray-700">
+                        Хуулж байна...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <div className="p-4 bg-teal-100 rounded-2xl mb-4">
+                        <Upload className="h-10 w-10 text-teal-600" />
+                      </div>
+                      <span className="text-base font-semibold text-gray-700">
+                        Зураг оруулахын тулд дарна уу
+                      </span>
+                      <span className="mt-2 text-sm text-gray-500">
+                        PNG, JPG (5MB хүртэл)
+                      </span>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                </label>
+              )}
+            </Card>
+
+            {/* Details Card */}
+            <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-blue-100 rounded-xl">
+                  <Home className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">
+                    Дэлгэрэнгүй мэдээлэл
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Үл хөдлөх хөрөнгийн мэдээлэл
+                  </p>
+                </div>
+              </div>
 
               <div className="space-y-5">
                 <div>
-                  <Label className="mb-2 text-sm text-gray-600">Photo</Label>
-                  <div className="mt-2">
-                    {formData.photo ? (
-                      <div className="relative inline-block">
-                        <img
-                          src={formData.photo || "/placeholder.svg"}
-                          alt="Uploaded preview"
-                          className="h-32 w-32 rounded-lg object-cover border border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleRemovePhoto}
-                          className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white hover:bg-red-600 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label
-                        className={`flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors ${
-                          isUploading ? "pointer-events-none opacity-50" : ""
-                        }`}
-                      >
-                        {isUploading ? (
-                          <div className="flex flex-col items-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-[#5d8a6b]" />
-                            <span className="mt-2 text-sm text-gray-500">
-                              Uploading...
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center">
-                            <Upload className="h-8 w-8 text-gray-400" />
-                            <span className="mt-2 text-sm text-gray-500">
-                              Click to upload photo
-                            </span>
-                            <span className="mt-1 text-xs text-gray-400">
-                              PNG, JPG up to 5MB
-                            </span>
-                          </div>
-                        )}
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileChange}
-                          disabled={isUploading}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="mb-2 text-sm text-gray-600">
-                    Listing Title
+                  <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                    Гарчиг
                   </Label>
                   <Input
-                    placeholder="Luxury Villa with Ocean View"
+                    placeholder="Жишээ нь: 2 өрөө орон сууц, Сүхбаатар дүүрэг"
                     value={formData.title}
                     onChange={(e) =>
                       setFormData({ ...formData, title: e.target.value })
                     }
-                    className="border-gray-200"
+                    className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                   />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div>
-                    <Label className="mb-2 text-sm text-gray-600">Rooms</Label>
+                    <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Bed className="w-4 h-4 text-gray-500" />
+                      Өрөөний тоо
+                    </Label>
                     <Select
                       value={formData.rooms?.toString() || ""}
                       onValueChange={(value) =>
                         setFormData({ ...formData, rooms: parseInt(value) })
                       }
                     >
-                      <SelectTrigger className="border-gray-200 hover:cursor-pointer">
-                        <SelectValue placeholder="Select" />
+                      <SelectTrigger className="border-2 border-gray-200 hover:border-teal-400 rounded-xl h-12 px-4">
+                        <SelectValue placeholder="Сонгох" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         {[1, 2, 3, 4, 5, 6, 7, 8].map((num) => (
-                          <SelectItem key={num} value={num.toString()}>
-                            {num}
+                          <SelectItem
+                            key={num}
+                            value={num.toString()}
+                            className="rounded-lg"
+                          >
+                            {num} өрөө
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+
                   <div>
-                    <Label className="mb-2 text-sm text-gray-600">Kind</Label>
+                    <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Home className="w-4 h-4 text-gray-500" />
+                      Төрөл
+                    </Label>
                     <Select
                       value={formData.kind || ""}
                       onValueChange={(value: "SALE" | "RENT") =>
                         setFormData({ ...formData, kind: value })
                       }
                     >
-                      <SelectTrigger className="border-gray-200 hover:cursor-pointer">
-                        <SelectValue placeholder="Select kind" />
+                      <SelectTrigger className="border-2 border-gray-200 hover:border-teal-400 rounded-xl h-12 px-4">
+                        <SelectValue placeholder="Сонгох" />
                       </SelectTrigger>
-
-                      <SelectContent>
-                        <SelectItem value="RENT">Rent</SelectItem>
-                        <SelectItem value="SALE">Sale</SelectItem>
+                      <SelectContent className="rounded-xl">
+                        <SelectItem value="RENT" className="rounded-lg">
+                          Түрээс
+                        </SelectItem>
+                        <SelectItem value="SALE" className="rounded-lg">
+                          Зарах
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div>
-                    <Label className="mb-2 text-sm text-gray-600">
-                      Size (m²)
+                    <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Maximize className="w-4 h-4 text-gray-500" />
+                      Талбай (м²)
                     </Label>
                     <Input
                       type="number"
@@ -305,19 +354,19 @@ export function CreateListingForm() {
                             : null,
                         })
                       }
-                      className="border-gray-200"
+                      className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                     />
                   </div>
 
                   <div>
-                    <Label className="mb-2 text-sm text-gray-600">
-                      {formData.kind === "SALE" ? "Price (₮)" : "Price (₮/mo)"}
+                    <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-gray-500" />
+                      {formData.kind === "SALE" ? "Үнэ (₮)" : "Үнэ (₮/сар)"}
                     </Label>
-
                     <Input
                       type="number"
                       placeholder={
-                        formData.kind === "SALE" ? "180000000" : "500000"
+                        formData.kind === "SALE" ? "180,000,000" : "500,000"
                       }
                       value={formData.price || ""}
                       onChange={(e) =>
@@ -326,13 +375,16 @@ export function CreateListingForm() {
                           price: parseInt(e.target.value) || 0,
                         })
                       }
-                      className="border-gray-200"
+                      className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label className="mb-2 text-sm text-gray-600">Address</Label>
+                  <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    Хаяг
+                  </Label>
                   <Select
                     value={location}
                     onValueChange={(value) => {
@@ -340,89 +392,54 @@ export function CreateListingForm() {
                       setFormData((prev) => ({ ...prev, address: value }));
                     }}
                   >
-                    <SelectTrigger className="w-[240px] rounded-lg bg-white hover:cursor-pointer">
+                    <SelectTrigger className="border-2 border-gray-200 hover:border-teal-400 rounded-xl h-12 px-4">
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        <SelectValue placeholder="All locations" />
+                        <MapPin className="w-4 h-4 text-gray-500" />
+                        <SelectValue placeholder="Дүүрэг сонгох" />
                       </div>
                     </SelectTrigger>
-
-                    <SelectContent>
-                      <SelectItem value={ALL}>All locations</SelectItem>
-                      <SelectItem value="Bayangol">
-                        Bayangol (Баянгол)
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value={ALL} className="rounded-lg">
+                        Бүх дүүрэг
                       </SelectItem>
-                      <SelectItem value="Bayanzurkh">
-                        Bayanzurkh (Баянзүрх)
+                      <SelectItem value="Bayangol" className="rounded-lg">
+                        Баянгол
                       </SelectItem>
-                      <SelectItem value="Chingeltei">
-                        Chingeltei (Чингэлтэй)
+                      <SelectItem value="Bayanzurkh" className="rounded-lg">
+                        Баянзүрх
                       </SelectItem>
-                      <SelectItem value="Khan-Uul">
-                        Khan-Uul (Хан-Уул)
+                      <SelectItem value="Chingeltei" className="rounded-lg">
+                        Чингэлтэй
                       </SelectItem>
-                      <SelectItem value="Nalaikh">Nalaikh (Налайх)</SelectItem>
-                      <SelectItem value="Songinokhairkhan">
-                        Songinokhairkhan (Сонгинохайрхан)
+                      <SelectItem value="Khan-Uul" className="rounded-lg">
+                        Хан-Уул
                       </SelectItem>
-                      <SelectItem value="Sukhbaatar">
-                        Sukhbaatar (Сүхбаатар)
+                      <SelectItem value="Nalaikh" className="rounded-lg">
+                        Налайх
                       </SelectItem>
-                      <SelectItem value="Baganuur">
-                        Baganuur (Багануур)
+                      <SelectItem
+                        value="Songinokhairkhan"
+                        className="rounded-lg"
+                      >
+                        Сонгинохайрхан
                       </SelectItem>
-                      <SelectItem value="Bagakhangai">
-                        Bagakhangai (Багахангай)
+                      <SelectItem value="Sukhbaatar" className="rounded-lg">
+                        Сүхбаатар
+                      </SelectItem>
+                      <SelectItem value="Baganuur" className="rounded-lg">
+                        Багануур
+                      </SelectItem>
+                      <SelectItem value="Bagakhangai" className="rounded-lg">
+                        Багахангай
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                {/* <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    Pick location on map
-                  </Label>
 
-                  <PickLocationMap
-                    lat={formData.lat}
-                    lng={formData.lng}
-                    onPick={({ lat, lng }) => {
-                      setFormData((prev) => ({ ...prev, lat, lng }));
-                      toast.success(
-                        `Location set: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
-                      );
-                    }}
-                  />
-
-                  <div className="text-sm text-gray-600">
-                    {formData.lat != null && formData.lng != null ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <span>
-                          Selected:{" "}
-                          <b>
-                            {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
-                          </b>
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData((p) => ({ ...p, lat: null, lng: null }))
-                          }
-                          className="text-red-600 hover:underline"
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="opacity-70">
-                        Map дээр дарж pin тавиад координат сонго
-                      </span>
-                    )}
-                  </div>
-                </div> */}
-                <div className="space-y-2">
-                  <Label className="text-sm text-gray-600">
-                    Pick location on map
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-500" />
+                    Газрын зураг дээр байршил сонгох
                   </Label>
 
                   <PickLocationMapOSM
@@ -431,52 +448,54 @@ export function CreateListingForm() {
                     onPick={({ lat, lng }) => {
                       setFormData((prev) => ({ ...prev, lat, lng }));
                       toast.success(
-                        `Location set: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
+                        `Байршил: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
                       );
                     }}
                   />
 
-                  <div className="text-sm text-gray-600">
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
                     {formData.lat != null && formData.lng != null ? (
-                      <div className="flex items-center justify-between gap-2">
-                        <span>
-                          Selected:{" "}
-                          <b>
-                            {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
-                          </b>
-                        </span>
-
+                      <>
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm text-gray-700">
+                            <span className="font-semibold">
+                              {formData.lat.toFixed(6)},{" "}
+                              {formData.lng.toFixed(6)}
+                            </span>
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() =>
                             setFormData((p) => ({ ...p, lat: null, lng: null }))
                           }
-                          className="text-red-600 hover:underline"
+                          className="text-sm text-red-600 hover:text-red-700 font-semibold hover:underline"
                         >
-                          Clear
+                          Арилгах
                         </button>
-                      </div>
+                      </>
                     ) : (
-                      <span className="opacity-70">
-                        Map дээр дарж pin тавиад координат сонго
+                      <span className="text-sm text-gray-500">
+                        Газрын зураг дээр дарж байршил сонгоно уу
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="flex gap-4 pt-4">
+                <div className="pt-4">
                   <Button
                     onClick={handleSubmit}
                     disabled={isLoading || isUploading}
-                    className="bg-[#5d8a6b] px-8 hover:bg-[#4a7558] hover:cursor-pointer"
+                    className="w-full bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white h-14 rounded-xl text-base font-semibold shadow-lg shadow-teal-500/30 transition-all hover:shadow-xl hover:shadow-teal-500/40"
                   >
                     {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Хадгалж байна...
+                      </span>
                     ) : (
-                      "Save"
+                      "Хадгалах"
                     )}
                   </Button>
                 </div>
@@ -484,78 +503,100 @@ export function CreateListingForm() {
             </Card>
           </div>
 
-          <div className="lg:pt-[72px] ">
-            <h2 className="mb-4 text-lg font-semibold text-foreground">
-              Preview
-            </h2>
-
-            <Card className="overflow-hidden bg-white ">
-              <div className="relative p-2 rounded-xl">
-                {formData.photo ? (
-                  <img
-                    src={formData.photo || "/placeholder.svg"}
-                    alt="Property preview"
-                    className="h-48 w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-48 w-full items-center justify-center bg-gray-100 rounded-xl p-">
-                    <div className="text-center text-gray-400">
-                      <Upload className="mx-auto h-8 w-8" />
-                      <p className="mt-2 text-sm">No photo uploaded</p>
-                    </div>
-                  </div>
-                )}
-                <button className="absolute right-3 top-3 rounded-full bg-white/80 p-2"></button>
+          <div className="space-y-6">
+            <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 rounded-3xl overflow-hidden">
+              <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 rounded-2xl">
+                <h2 className="text-lg font-bold text-white">Урьдчилан үзэх</h2>
+                <p className="text-sm text-teal-50">Таны зар ингэж харагдана</p>
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-foreground">
-                  {formData.title || "Your Listing Title"}
-                </h3>
-                <span className="">For: {formData.kind ?? "-"}</span>
-                <p className="mb-2 text-xl font-bold text-[#5d8a6b]">
-                  ₮{(formData.price || 0).toLocaleString()}
-                  {formData.kind === "RENT" && (
-                    <span className="text-sm font-normal text-gray-500">
-                      /mo
-                    </span>
-                  )}
-                </p>
 
-                <div className="flex items-center gap-1 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4 text-[#5d8a6b]" />
-                  {formData.address || "Address will appear here"}
+              <div className="p-4">
+                <div className="relative rounded-2xl overflow-hidden">
+                  {formData.photo ? (
+                    <img
+                      src={formData.photo}
+                      alt="Property preview"
+                      className="h-56 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-56 w-full items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl">
+                      <div className="text-center text-gray-400">
+                        <div className="p-4 bg-white/80 rounded-2xl inline-block mb-3">
+                          <Upload className="mx-auto h-10 w-10" />
+                        </div>
+                        <p className="text-sm font-medium">Зураг байхгүй</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="mt-2 flex items-center gap-3 text-sm text-gray-600">
-                  <span className="flex items-center gap-1">
-                    <Star className="h-4 w-4" />
-                    {formData.rooms ?? "-"} rooms
-                  </span>
-                  <span>·</span>
-                  <span>{formData.sizeM2 ?? "-"} m²</span>
+
+                <div className="mt-4 space-y-3">
+                  <h3 className="font-bold text-xl text-gray-900">
+                    {formData.title || "Зарын гарчиг"}
+                  </h3>
+
+                  {formData.kind && (
+                    <div className="inline-block">
+                      <span className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-bold rounded-full">
+                        {formData.kind === "RENT" ? "Түрээс" : "Зарах"}
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
+                    ₮{(formData.price || 0).toLocaleString()}
+                    {formData.kind === "RENT" && (
+                      <span className="text-lg font-normal text-gray-500">
+                        /сар
+                      </span>
+                    )}
+                  </p>
+
+                  <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-xl p-3">
+                    <MapPin className="h-4 w-4 text-teal-600" />
+                    <span className="font-medium">
+                      {formData.address || "Хаяг оруулаагүй"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-600 bg-gray-50 rounded-xl p-3">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Bed className="h-4 w-4 text-gray-500" />
+                      {formData.rooms ?? "-"} өрөө
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Maximize className="h-4 w-4 text-gray-500" />
+                      {formData.sizeM2 ?? "-"} м²
+                    </span>
+                  </div>
                 </div>
               </div>
             </Card>
 
-            <Card className="mt-4 bg-white p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <Lightbulb className="h-5 w-5 text-[#5d8a6b]" />
-                <h3 className="font-semibold text-foreground">
-                  Tips for a Great Listing
+            {/* Tips Card */}
+            <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 shadow-lg shadow-amber-200/50 p-6 rounded-3xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-amber-100 rounded-xl">
+                  <Lightbulb className="h-5 w-5 text-amber-600" />
+                </div>
+                <h3 className="font-bold text-lg text-gray-900">
+                  Хэрэгтэй зөвлөгөө
                 </h3>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {[
-                  "Use a catchy and descriptive title",
-                  "Add high-quality photos",
-                  "Highlight the property's key features",
-                  "Set a competitive price",
+                  "Тодорхой, сонирхол татахуйц гарчиг бичнэ",
+                  "Өндөр чанарын зураг ашиглана",
+                  "Үл хөдлөх хөрөнгийн онцлогийг тодруулна",
+                  "Өрсөлдөхүйц үнэ тогтооно",
                 ].map((tip, i) => (
                   <li
                     key={i}
-                    className="flex items-center gap-2 text-sm text-gray-600"
+                    className="flex items-start gap-3 text-sm text-gray-700"
                   >
-                    <CheckCircle2 className="h-4 w-4 text-[#5d8a6b]" />
-                    {tip}
+                    <CheckCircle2 className="h-5 w-5 text-teal-600 flex-shrink-0 mt-0.5" />
+                    <span className="font-medium">{tip}</span>
                   </li>
                 ))}
               </ul>

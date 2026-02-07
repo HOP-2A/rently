@@ -23,14 +23,20 @@ type RentalRequestStatus =
   | "CANCELED"
   | string;
 
+type RentalRequestType = "RENT_REQUEST" | "BUY_REQUEST" | string;
+
 type RentalRequest = {
   id: string;
+  type?: RentalRequestType | null;
+
   message: string | null;
   moveInDate: string | null;
   durationMonths: number | null;
   phone: string | null;
+
   status: RentalRequestStatus;
   createdAt: string;
+
   renter?: UserMini | null;
   renterId?: string | null;
 };
@@ -62,6 +68,13 @@ function APPROVE_ENDPOINT(requestId: string) {
 }
 function REJECT_ENDPOINT(requestId: string) {
   return `/api/rentalRequests/${requestId}/reject`;
+}
+
+function typeLabel(t: string | null | undefined) {
+  return t === "BUY_REQUEST" ? "ХУДАЛДАХ" : "ТҮРЭЭС";
+}
+function typeText(t: string | null | undefined) {
+  return t === "BUY_REQUEST" ? "Худалдах хүсэлт" : "Түрээслэх хүсэлт";
 }
 
 export default function LandlordRequestsPage() {
@@ -114,14 +127,14 @@ export default function LandlordRequestsPage() {
 
       if (!res.ok) {
         if (isApiError(data)) setError(data.message ?? data.error);
-        else setError("Failed to fetch listings");
+        else setError("Мэдээлэл татахад алдаа гарлаа");
         setListings([]);
         setSelectedListingId(null);
         return;
       }
 
       if (!Array.isArray(data)) {
-        setError("Invalid server response");
+        setError("Серверийн хариу буруу байна");
         setListings([]);
         setSelectedListingId(null);
         return;
@@ -138,7 +151,7 @@ export default function LandlordRequestsPage() {
       }
     } catch (e) {
       console.error(e);
-      setError("Network / server error");
+      setError("Сүлжээний алдаа гарлаа");
       setListings([]);
       setSelectedListingId(null);
     } finally {
@@ -179,7 +192,7 @@ export default function LandlordRequestsPage() {
 
       if (!res.ok) {
         if (isApiError(data)) setError(data.message ?? data.error);
-        else setError("Failed to update request");
+        else setError("Хүсэлт шинэчлэхэд алдаа гарлаа");
         return;
       }
 
@@ -204,7 +217,7 @@ export default function LandlordRequestsPage() {
       await fetchData();
     } catch (e) {
       console.error(e);
-      setError("Network / server error while updating request");
+      setError("Хүсэлт шинэчлэхэд алдаа гарлаа");
     } finally {
       setSavingId(null);
     }
@@ -220,25 +233,26 @@ export default function LandlordRequestsPage() {
   }, [listings]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50/30 via-white to-blue-50/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
-                Rental Requests
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">
+                Хүсэлтүүд
               </h1>
-              <p className="text-gray-600 mt-2">
-                Manage all incoming requests for your properties
+              <p className="text-gray-600 mt-2 text-base">
+                Таны үл хөдлөх хөрөнгийн түрээс, худалдах хүсэлтүүдийг удирдах
               </p>
             </div>
 
             <div className="flex items-center gap-3">
               {totalPending > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-amber-900">
-                    {totalPending} pending
+                <div className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 rounded-2xl shadow-lg shadow-amber-200/50">
+                  <div className="w-2.5 h-2.5 bg-amber-500 rounded-full animate-pulse shadow-lg shadow-amber-500/50" />
+                  <span className="text-sm font-bold text-amber-900">
+                    {totalPending} хүлээгдэж буй
                   </span>
                 </div>
               )}
@@ -246,10 +260,10 @@ export default function LandlordRequestsPage() {
                 variant="outline"
                 onClick={fetchData}
                 disabled={loading}
-                className="shadow-sm"
+                className="shadow-lg border-2 hover:border-teal-400 rounded-xl h-12 px-5 font-semibold"
               >
                 <svg
-                  className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+                  className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -261,7 +275,7 @@ export default function LandlordRequestsPage() {
                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                   />
                 </svg>
-                Refresh
+                Шинэчлэх
               </Button>
             </div>
           </div>
@@ -269,7 +283,7 @@ export default function LandlordRequestsPage() {
           <div className="mt-6 max-w-md">
             <div className="relative">
               <svg
-                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -282,20 +296,21 @@ export default function LandlordRequestsPage() {
                 />
               </svg>
               <Input
-                placeholder="Search by title or address..."
+                placeholder="Гарчиг эсвэл хаягаар хайх..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 shadow-sm"
+                className="pl-12 h-12 rounded-2xl border-2 focus:border-teal-500 shadow-sm text-base"
               />
             </div>
           </div>
         </div>
 
+        {/* Error */}
         {error && (
-          <div className="mb-6">
-            <div className="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-start gap-3 p-5 bg-gradient-to-r from-red-50 to-red-100/50 border-2 border-red-300 rounded-2xl shadow-lg shadow-red-200/50">
               <svg
-                className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
+                className="w-6 h-6 text-red-600 mt-0.5 flex-shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -307,57 +322,77 @@ export default function LandlordRequestsPage() {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <p className="text-sm text-red-800">{error}</p>
+              <p className="text-sm font-medium text-red-900">{error}</p>
             </div>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-1">
-            <Card className="shadow-lg border-gray-200">
-              <div className="p-5 border-b border-gray-100">
+            <Card className="shadow-xl border-2 border-gray-200 rounded-3xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-gray-900">
-                    Your Properties
+                  <h2 className="font-bold text-white text-lg">
+                    Таны үл хөдлөх хөрөнгө
                   </h2>
-                  <Badge variant="secondary" className="font-medium">
+                  <Badge className="bg-white/20 text-white border-white/30 font-bold text-base px-3 py-1">
                     {filteredListings.length}
                   </Badge>
                 </div>
               </div>
 
-              <div className="p-3 max-h-[calc(100vh-16rem)] overflow-y-auto">
+              <div className="p-4 max-h-[calc(100vh-16rem)] overflow-y-auto">
                 {loading && (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                  <div className="flex items-center justify-center py-16">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200" />
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-500 border-t-transparent absolute top-0 left-0" />
+                    </div>
                   </div>
                 )}
 
                 {!loading && filteredListings.length === 0 && (
-                  <div className="text-center py-12">
-                    <svg
-                      className="w-12 h-12 text-gray-400 mx-auto mb-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                      />
-                    </svg>
-                    <p className="text-sm text-gray-500">No listings found</p>
+                  <div className="text-center py-16">
+                    <div className="p-4 bg-gray-100 rounded-3xl inline-block mb-4">
+                      <svg
+                        className="w-12 h-12 text-gray-400 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium text-gray-500">
+                      Зар олдсонгүй
+                    </p>
                   </div>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {!loading &&
                     filteredListings.map((l) => {
                       const isActive = l.id === selectedListingId;
+
                       const pendingCount = (l.rentalRequests ?? []).filter(
                         (r) => r.status === "PENDING",
+                      ).length;
+
+                      const pendingRent = (l.rentalRequests ?? []).filter(
+                        (r) =>
+                          r.status === "PENDING" &&
+                          (r.type ?? "RENT_REQUEST") !== "BUY_REQUEST",
+                      ).length;
+
+                      const pendingBuy = (l.rentalRequests ?? []).filter(
+                        (r) =>
+                          r.status === "PENDING" &&
+                          (r.type ?? "RENT_REQUEST") === "BUY_REQUEST",
                       ).length;
 
                       return (
@@ -365,22 +400,22 @@ export default function LandlordRequestsPage() {
                           key={l.id}
                           onClick={() => setSelectedListingId(l.id)}
                           className={`
-                            w-full text-left rounded-lg border-2 p-4 transition-all duration-200
+                            w-full text-left rounded-2xl border-2 p-5 transition-all duration-200
                             ${
                               isActive
-                                ? "border-gray-900 bg-gray-50 shadow-sm"
-                                : "border-transparent bg-white hover:bg-gray-50 hover:border-gray-200"
+                                ? "border-teal-500 bg-gradient-to-br from-teal-50 to-teal-100/50 shadow-lg shadow-teal-200/50 scale-[1.02]"
+                                : "border-gray-200 bg-white hover:bg-gray-50 hover:border-teal-300 hover:shadow-md"
                             }
                           `}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                              <h3 className="font-medium text-gray-900 truncate">
+                              <h3 className="font-bold text-gray-900 truncate text-base">
                                 {l.title}
                               </h3>
-                              <p className="text-sm text-gray-500 mt-1 truncate flex items-center gap-1">
+                              <p className="text-sm text-gray-600 mt-2 truncate flex items-center gap-1.5">
                                 <svg
-                                  className="w-3.5 h-3.5 flex-shrink-0"
+                                  className="w-4 h-4 flex-shrink-0 text-teal-600"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -398,22 +433,45 @@ export default function LandlordRequestsPage() {
                                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                                   />
                                 </svg>
-                                {l.address || "No address"}
+                                {l.address || "Хаяг байхгүй"}
                               </p>
                             </div>
 
-                            <div>
+                            <div className="flex flex-col items-end gap-2">
                               {pendingCount > 0 ? (
-                                <Badge className="bg-amber-500 hover:bg-amber-600">
+                                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/30 font-bold">
                                   {pendingCount}
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant="outline"
-                                  className="text-gray-500"
+                                  className="text-gray-500 border-2"
                                 >
                                   0
                                 </Badge>
+                              )}
+
+                              {(pendingRent > 0 || pendingBuy > 0) && (
+                                <div className="flex flex-col gap-1">
+                                  {pendingRent > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-amber-700 border-2 border-amber-300 bg-amber-50 font-bold text-xs"
+                                      title="Түрээсийн хүсэлт"
+                                    >
+                                      ТҮРЭЭС {pendingRent}
+                                    </Badge>
+                                  )}
+                                  {pendingBuy > 0 && (
+                                    <Badge
+                                      variant="outline"
+                                      className="text-blue-700 border-2 border-blue-300 bg-blue-50 font-bold text-xs"
+                                      title="Худалдах хүсэлт"
+                                    >
+                                      ХУДАЛДАХ {pendingBuy}
+                                    </Badge>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>
@@ -425,36 +483,40 @@ export default function LandlordRequestsPage() {
             </Card>
           </div>
 
+          {/* Request Details */}
           <div className="lg:col-span-2">
-            <Card className="shadow-lg border-gray-200">
+            <Card className="shadow-xl border-2 border-gray-200 rounded-3xl overflow-hidden">
               {!selectedListing ? (
-                <div className="flex flex-col items-center justify-center py-20 px-4">
-                  <svg
-                    className="w-16 h-16 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  <p className="text-gray-500 text-center">
-                    Select a property to view rental requests
+                <div className="flex flex-col items-center justify-center py-24 px-4">
+                  <div className="p-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl mb-6">
+                    <svg
+                      className="w-16 h-16 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 text-center font-medium text-lg">
+                    Үл хөдлөх хөрөнгө сонгоно уу
                   </p>
                 </div>
               ) : (
                 <>
-                  <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+                  {/* Header */}
+                  <div className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-xl font-semibold text-gray-900 truncate">
+                        <h2 className="text-xl font-bold text-white truncate">
                           {selectedListing.title}
                         </h2>
-                        <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                        <p className="text-sm text-teal-50 mt-2 flex items-center gap-1.5">
                           <svg
                             className="w-4 h-4 flex-shrink-0"
                             fill="none"
@@ -474,37 +536,36 @@ export default function LandlordRequestsPage() {
                               d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                             />
                           </svg>
-                          {selectedListing.address || "No address"}
+                          {selectedListing.address || "Хаяг байхгүй"}
                         </p>
                       </div>
 
-                      <Badge variant="outline" className="font-medium">
-                        {(selectedListing.rentalRequests ?? []).length}{" "}
-                        {(selectedListing.rentalRequests ?? []).length === 1
-                          ? "request"
-                          : "requests"}
+                      <Badge className="bg-white/20 text-white border-white/30 font-bold text-base px-4 py-2">
+                        {(selectedListing.rentalRequests ?? []).length} хүсэлт
                       </Badge>
                     </div>
                   </div>
 
-                  <div className="p-5 max-h-[calc(100vh-16rem)] overflow-y-auto">
+                  <div className="p-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
                     {(selectedListing.rentalRequests ?? []).length === 0 ? (
-                      <div className="text-center py-16">
-                        <svg
-                          className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-                          />
-                        </svg>
-                        <p className="text-gray-500">
-                          No rental requests yet for this property
+                      <div className="text-center py-20">
+                        <div className="p-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl inline-block mb-4">
+                          <svg
+                            className="w-16 h-16 text-gray-400 mx-auto"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                            />
+                          </svg>
+                        </div>
+                        <p className="text-gray-600 font-medium">
+                          Одоогоор хүсэлт байхгүй байна
                         </p>
                       </div>
                     ) : (
@@ -515,29 +576,40 @@ export default function LandlordRequestsPage() {
                             r.renter?.name ??
                             r.renter?.email ??
                             r.renterId ??
-                            "Unknown renter";
+                            "Мэдэгдэхгүй";
 
                           const isPending = r.status === "PENDING";
                           const isBusy = savingId === r.id;
 
-                          const date = r.moveInDate
-                            ? new Date(r.moveInDate).toLocaleDateString("en-CA")
-                            : "";
+                          const reqType = r.type ?? "RENT_REQUEST";
+                          const isBuy = reqType === "BUY_REQUEST";
+
+                          const date =
+                            !isBuy && r.moveInDate
+                              ? new Date(r.moveInDate).toLocaleDateString(
+                                  "en-CA",
+                                )
+                              : "—";
 
                           return (
                             <Card
                               key={r.id}
                               className={`
-                                p-5 transition-all duration-200
-                                ${isPending ? "border-amber-200 bg-amber-50/30" : "border-gray-200"}
+                                p-6 transition-all duration-200 rounded-2xl border-2
+                                ${
+                                  isPending
+                                    ? "border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50/30 shadow-lg shadow-amber-200/50"
+                                    : "border-gray-200 bg-white"
+                                }
                               `}
                             >
-                              <div className="flex flex-col gap-4">
+                              <div className="flex flex-col gap-5">
+                                {/* Header */}
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-teal-500/30">
                                       <svg
-                                        className="w-5 h-5 text-gray-600"
+                                        className="w-6 h-6 text-white"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -551,13 +623,13 @@ export default function LandlordRequestsPage() {
                                       </svg>
                                     </div>
                                     <div>
-                                      <h3 className="font-medium text-gray-900">
+                                      <h3 className="font-bold text-gray-900 text-base">
                                         {renterName}
                                       </h3>
-                                      <p className="text-xs text-gray-500 mt-0.5">
+                                      <p className="text-xs text-gray-500 mt-1">
                                         {new Date(
                                           r.createdAt,
-                                        ).toLocaleDateString("en-US", {
+                                        ).toLocaleDateString("mn-MN", {
                                           month: "short",
                                           day: "numeric",
                                           year: "numeric",
@@ -566,39 +638,61 @@ export default function LandlordRequestsPage() {
                                     </div>
                                   </div>
 
-                                  <Badge
-                                    variant={
-                                      r.status === "APPROVED"
-                                        ? "default"
+                                  <div className="flex items-center gap-2">
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        reqType === "BUY_REQUEST"
+                                          ? "border-2 border-blue-400 text-blue-700 bg-blue-50 font-bold"
+                                          : "border-2 border-amber-400 text-amber-700 bg-amber-50 font-bold"
+                                      }
+                                      title={typeText(reqType)}
+                                    >
+                                      {typeLabel(reqType)}
+                                    </Badge>
+
+                                    <Badge
+                                      variant={
+                                        r.status === "APPROVED"
+                                          ? "default"
+                                          : r.status === "REJECTED"
+                                            ? "destructive"
+                                            : r.status === "CANCELED"
+                                              ? "outline"
+                                              : "secondary"
+                                      }
+                                      className={`font-bold ${
+                                        r.status === "APPROVED"
+                                          ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/30"
+                                          : ""
+                                      }`}
+                                    >
+                                      {r.status === "APPROVED"
+                                        ? "ЗӨВШӨӨРСӨН"
                                         : r.status === "REJECTED"
-                                          ? "destructive"
+                                          ? "ТАТГАЛЗСАН"
                                           : r.status === "CANCELED"
-                                            ? "outline"
-                                            : "secondary"
-                                    }
-                                    className={
-                                      r.status === "APPROVED"
-                                        ? "bg-green-500 hover:bg-green-600"
-                                        : ""
-                                    }
-                                  >
-                                    {r.status}
-                                  </Badge>
+                                            ? "ЦУЦЛАСАН"
+                                            : "ХҮЛЭЭГДЭЖ БУЙ"}
+                                    </Badge>
+                                  </div>
                                 </div>
 
+                                {/* Message */}
                                 {r.message && (
-                                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                  <div className="bg-white rounded-xl p-4 border-2 border-gray-200 shadow-sm">
+                                    <p className="text-sm text-gray-700 whitespace-pre-wrap font-medium">
                                       {r.message}
                                     </p>
                                   </div>
                                 )}
 
+                                {/* Details Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                  <div className="bg-white rounded-lg border border-gray-200 p-3">
-                                    <div className="flex items-center gap-2 text-gray-600 mb-1">
+                                  <div className="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
+                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
                                       <svg
-                                        className="w-4 h-4"
+                                        className="w-5 h-5 text-teal-600"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -610,19 +704,21 @@ export default function LandlordRequestsPage() {
                                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                                         />
                                       </svg>
-                                      <span className="text-xs font-medium">
-                                        Move-in Date
+                                      <span className="text-xs font-bold">
+                                        {isBuy
+                                          ? "Худалдах огноо"
+                                          : "Нүүх огноо"}
                                       </span>
                                     </div>
-                                    <p className="text-sm font-medium text-gray-900">
+                                    <p className="text-sm font-bold text-gray-900">
                                       {date}
                                     </p>
                                   </div>
 
-                                  <div className="bg-white rounded-lg border border-gray-200 p-3">
-                                    <div className="flex items-center gap-2 text-gray-600 mb-1">
+                                  <div className="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
+                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
                                       <svg
-                                        className="w-4 h-4"
+                                        className="w-5 h-5 text-teal-600"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -634,21 +730,23 @@ export default function LandlordRequestsPage() {
                                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                         />
                                       </svg>
-                                      <span className="text-xs font-medium">
-                                        Duration
+                                      <span className="text-xs font-bold">
+                                        {isBuy ? "Төсөв" : "Хугацаа"}
                                       </span>
                                     </div>
-                                    <p className="text-sm font-medium text-gray-900">
-                                      {r.durationMonths
-                                        ? `${r.durationMonths} ${r.durationMonths === 1 ? "month" : "months"}`
-                                        : "—"}
+                                    <p className="text-sm font-bold text-gray-900">
+                                      {isBuy
+                                        ? "—"
+                                        : r.durationMonths
+                                          ? `${r.durationMonths} сар`
+                                          : "—"}
                                     </p>
                                   </div>
 
-                                  <div className="bg-white rounded-lg border border-gray-200 p-3">
-                                    <div className="flex items-center gap-2 text-gray-600 mb-1">
+                                  <div className="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
+                                    <div className="flex items-center gap-2 text-gray-600 mb-2">
                                       <svg
-                                        className="w-4 h-4"
+                                        className="w-5 h-5 text-teal-600"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -660,16 +758,17 @@ export default function LandlordRequestsPage() {
                                           d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                                         />
                                       </svg>
-                                      <span className="text-xs font-medium">
-                                        Phone
+                                      <span className="text-xs font-bold">
+                                        Утас
                                       </span>
                                     </div>
-                                    <p className="text-sm font-medium text-gray-900">
+                                    <p className="text-sm font-bold text-gray-900">
                                       {r.phone ?? r.renter?.phone ?? "—"}
                                     </p>
                                   </div>
                                 </div>
 
+                                {/* Actions */}
                                 {isPending && (
                                   <div className="flex gap-3 pt-2">
                                     <Button
@@ -681,11 +780,11 @@ export default function LandlordRequestsPage() {
                                           "APPROVED",
                                         )
                                       }
-                                      className="flex-1 bg-green-600 hover:bg-green-700"
+                                      className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg shadow-green-500/30 h-12 rounded-xl font-bold"
                                     >
                                       {isBusy ? (
                                         <svg
-                                          className="animate-spin h-4 w-4 mr-2"
+                                          className="animate-spin h-5 w-5 mr-2"
                                           fill="none"
                                           viewBox="0 0 24 24"
                                         >
@@ -705,7 +804,7 @@ export default function LandlordRequestsPage() {
                                         </svg>
                                       ) : (
                                         <svg
-                                          className="w-4 h-4 mr-2"
+                                          className="w-5 h-5 mr-2"
                                           fill="none"
                                           stroke="currentColor"
                                           viewBox="0 0 24 24"
@@ -718,7 +817,7 @@ export default function LandlordRequestsPage() {
                                           />
                                         </svg>
                                       )}
-                                      {isBusy ? "Processing..." : "Approve"}
+                                      {isBusy ? "Шалгаж байна..." : "Зөвшөөрөх"}
                                     </Button>
 
                                     <Button
@@ -731,10 +830,10 @@ export default function LandlordRequestsPage() {
                                           "REJECTED",
                                         )
                                       }
-                                      className="flex-1 border-gray-300 hover:bg-gray-50"
+                                      className="flex-1 border-2 border-gray-300 hover:bg-red-50 hover:border-red-300 h-12 rounded-xl font-bold"
                                     >
                                       <svg
-                                        className="w-4 h-4 mr-2"
+                                        className="w-5 h-5 mr-2"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -746,7 +845,7 @@ export default function LandlordRequestsPage() {
                                           d="M6 18L18 6M6 6l12 12"
                                         />
                                       </svg>
-                                      Reject
+                                      Татгалзах
                                     </Button>
                                   </div>
                                 )}

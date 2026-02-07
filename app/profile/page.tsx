@@ -14,6 +14,10 @@ import {
   User as UserIcon,
   X,
   Plus,
+  Building2,
+  TrendingUp,
+  Calendar,
+  MessageSquare,
 } from "lucide-react";
 
 import { useAuth } from "@/providers/authProvider";
@@ -27,7 +31,7 @@ type ListingApiKind = ListingKind | "SALE" | "Sale" | "sell" | "rent" | null;
 
 type RentalRequestMini = {
   id: string;
-  status: "PENDING" | "ACCEPTED" | "REJECTED";
+
   createdAt: string;
 };
 
@@ -87,11 +91,13 @@ function InfoRow({
   value?: string | null;
 }) {
   return (
-    <div className="flex items-start gap-3 py-2">
-      <div className="mt-0.5 text-gray-400">{icon}</div>
-      <div className="min-w-0">
-        <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm text-gray-900 break-words">
+    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
+      <div className="mt-1 text-teal-600 bg-teal-50 p-2 rounded-xl">{icon}</div>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          {label}
+        </p>
+        <p className="text-sm font-medium text-gray-900 break-words">
           {value?.trim() ? value : "—"}
         </p>
       </div>
@@ -110,107 +116,127 @@ function ListingCard({
 
   const reqs = listing.rentalRequests ?? [];
   const totalReq = reqs.length;
-  const pendingCount = reqs.filter((r) => r.status === "PENDING").length;
-  const acceptedCount = reqs.filter((r) => r.status === "ACCEPTED").length;
-  const rejectedCount = reqs.filter((r) => r.status === "REJECTED").length;
+  // const pendingCount = reqs.filter((r) => r.status === "PENDING").length;
+  // const acceptedCount = reqs.filter((r) => r.status === "ACCEPTED").length;
+  // const rejectedCount = reqs.filter((r) => r.status === "REJECTED").length;
 
   return (
     <Link href={`/listing/${listing.id}`} className="block group">
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-        <div className="relative overflow-hidden h-56">
+      <div className="bg-white rounded-3xl shadow-md border-2 border-gray-100 overflow-hidden transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:border-teal-300">
+        <div className="relative overflow-hidden h-64">
           {photo ? (
             <img
               src={photo}
               alt={listing.address}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
             />
           ) : (
-            <div className="w-full h-full bg-gray-200" />
+            <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+              <Building2 className="w-16 h-16 text-gray-400" />
+            </div>
           )}
 
-          <div className="absolute top-3 right-3">{rightAction}</div>
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-          <div className="absolute top-3 left-3">
-            <span
-              className={`px-3 py-1 rounded-full text-xs font-semibold backdrop-blur ${
+          <div className="absolute top-3 right-3 z-10">{rightAction}</div>
+
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {/* <span
+              className={`px-4 py-2 rounded-2xl text-xs font-bold backdrop-blur-md shadow-lg border-2 ${
                 listing.status === "APPROVED"
-                  ? "bg-green-100/90 text-green-700"
+                  ? "bg-emerald-500/90 text-white border-emerald-400"
                   : listing.status === "PENDING"
-                    ? "bg-yellow-100/90 text-yellow-700"
-                    : "bg-red-100/90 text-red-700"
+                    ? "bg-amber-500/90 text-white border-amber-400"
+                    : "bg-red-500/90 text-white border-red-400"
               }`}
             >
-              {listing.status}
-            </span>
+              {listing.status === "APPROVED"
+                ? "ЗӨВШӨӨРСӨН"
+                : listing.status === "PENDING"
+                  ? "ХҮЛЭЭГДЭЖ БУЙ"
+                  : "ТАТГАЛЗСАН"}
+            </span> */}
           </div>
 
           <div className="absolute bottom-3 left-3">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 backdrop-blur">
-              {listing.kind === "RENT" ? "Түрээс" : "Зарах"}
+            <span className="px-4 py-2 rounded-2xl text-xs font-bold bg-white/95 text-gray-900 backdrop-blur-md shadow-lg border-2 border-white/50">
+              {listing.kind === "RENT" ? "🏠 Түрээс" : "💰 Зарах"}
             </span>
           </div>
 
           {totalReq > 0 && (
             <div className="absolute bottom-3 right-3">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/90 text-gray-800 backdrop-blur border">
-                Requests {totalReq}
+              <span className="px-4 py-2 rounded-2xl text-xs font-bold bg-gradient-to-r from-blue-500 to-blue-600 text-white backdrop-blur-md shadow-lg border-2 border-blue-400 flex items-center gap-2">
+                <MessageSquare className="w-3.5 h-3.5" />
+                {totalReq} хүсэлт
               </span>
             </div>
           )}
         </div>
 
-        <div className="p-5">
-          <div className="flex justify-between items-start mb-3">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-4">
             <div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-3xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
                 ₮{listing.price.toLocaleString()}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
                 {listing.kind === "RENT" ? "сар бүр" : "нийт үнэ"}
               </p>
             </div>
           </div>
 
-          <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-teal-600 transition-colors">
+          <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-teal-600 transition-colors">
             {listing.title}
           </h3>
 
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex items-start gap-2">
+            <span className="text-teal-600 mt-0.5">📍</span>
             {listing.address}
           </p>
 
-          <div className="flex flex-wrap gap-2 mb-3">
-            <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700 border">
-              Requests: {totalReq}
-            </span>
-
-            {pendingCount > 0 && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
-                Pending {pendingCount}
+          {totalReq > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4 p-3 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl border border-gray-200">
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-gray-700 border-2 border-gray-300 shadow-sm flex items-center gap-1.5">
+                <MessageSquare className="w-3.5 h-3.5" />
+                Нийт: {totalReq}
               </span>
-            )}
 
-            {acceptedCount > 0 && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                Accepted {acceptedCount}
-              </span>
-            )}
+              {/* {pendingCount > 0 && (
+                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30 border-2 border-amber-400">
+                  ⏳ Хүлээгдэж буй {pendingCount}
+                </span>
+              )}
 
-            {rejectedCount > 0 && (
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200">
-                Rejected {rejectedCount}
-              </span>
-            )}
-          </div>
+              {acceptedCount > 0 && (
+                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-emerald-500/30 border-2 border-emerald-400">
+                  ✓ Зөвшөөрсөн {acceptedCount}
+                </span>
+              )}
 
-          <div className="flex items-center gap-4 text-xs text-gray-500 pt-3 border-t">
+              {rejectedCount > 0 && (
+                <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/30 border-2 border-red-400">
+                  ✕ Татгалзсан {rejectedCount}
+                </span>
+              )} */}
+            </div>
+          )}
+
+          <div className="flex items-center gap-4 text-xs font-semibold text-gray-600 pt-4 border-t-2 border-gray-100">
             {listing.rooms != null && (
-              <span className="flex items-center gap-1">
-                <Users className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                <Users className="w-4 h-4 text-teal-600" />
                 {listing.rooms} өрөө
               </span>
             )}
-            {listing.sizeM2 != null && <span>{listing.sizeM2} м²</span>}
+            {listing.sizeM2 != null && (
+              <span className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
+                <TrendingUp className="w-4 h-4 text-teal-600" />
+                {listing.sizeM2} м²
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -273,7 +299,7 @@ export default function ProfilePage() {
           `/api/getListning/saved/${encodeURIComponent(user.id)}`,
           { cache: "no-store" },
         );
-        if (!res.ok) throw new Error(`Fetch saved failed: ${res.status}`);
+        // if (!res.ok) throw new Error(`Fetch saved failed: ${res.status}`);
 
         const json: unknown = await res.json();
         const arr: ListingFromApi[] = Array.isArray(json)
@@ -369,17 +395,17 @@ export default function ProfilePage() {
   }, [list, active, searchQuery]);
 
   const displayName =
-    user?.name ?? clerkUser?.fullName ?? clerkUser?.username ?? "User";
+    user?.name ?? clerkUser?.fullName ?? clerkUser?.username ?? "Хэрэглэгч";
   const avatarUrl = (user?.avatar ?? "").trim() || (clerkUser?.imageUrl ?? "");
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-20 bg-white border-b shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50/20">
+      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-lg border-b-2 border-gray-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-3">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-                <Home className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/30 group-hover:shadow-xl group-hover:shadow-teal-500/40 transition-all group-hover:scale-105">
+                <Home className="w-7 h-7 text-white" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
                 RENTLY
@@ -390,9 +416,9 @@ export default function ProfilePage() {
               <SignedOut>
                 <Link
                   href="/sign-in"
-                  className="px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700"
+                  className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold hover:from-teal-700 hover:to-teal-600 shadow-lg shadow-teal-500/30 transition-all hover:scale-105"
                 >
-                  Sign in
+                  Нэвтрэх
                 </Link>
               </SignedOut>
             </div>
@@ -402,84 +428,93 @@ export default function ProfilePage() {
 
       {!user?.id ? (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="bg-white border rounded-2xl p-10 text-center">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Login хийгээд профайлаа харна
+          <div className="bg-white border-2 border-gray-200 rounded-3xl p-12 text-center shadow-xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-teal-500/30">
+              <UserIcon className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              Нэвтрээд профайлаа харна уу
             </h2>
-            <p className="text-gray-500">
-              Нэвтэрсний дараа таны role-аас хамаараад өөр өөр хэсэг харагдана.
+            <p className="text-gray-600 text-lg mb-6">
+              Нэвтэрсний дараа таны эрхээс хамаараад өөр өөр хэсэг харагдана.
             </p>
+            <Link
+              href="/sign-in"
+              className="inline-block px-8 py-3 rounded-2xl bg-gradient-to-r from-teal-600 to-teal-500 text-white font-bold hover:from-teal-700 hover:to-teal-600 shadow-lg shadow-teal-500/30 transition-all hover:scale-105"
+            >
+              Нэвтрэх
+            </Link>
           </div>
         </div>
       ) : role === "RENTER" ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-            <aside className="relative overflow-hidden rounded-3xl border bg-white shadow-[0_10px_35px_-20px_rgba(0,0,0,0.35)]">
-              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-500 rounded-b-2xl" />
-              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-2xl" />
-              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8 ">
+            <aside className="relative overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-2xl ">
+              <div className="absolute  inset-x-0 top-0 h-32 bg-gradient-to-r from-teal-500 via-sky-500 to-indigo-500 rounded-b-3xl " />
+              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-3xl " />
+              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-3xl " />
 
-              <div className="relative p-5 pt-6">
+              <div className="relative p-6 pt-8">
                 <div className="flex items-start gap-4">
                   <div className="shrink-0">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
                         alt="avatar"
-                        className="h-16 w-16 rounded-2xl object-cover ring-4 ring-white/70 shadow-md"
+                        className="h-20 w-20 rounded-3xl object-cover ring-4 ring-white/70 shadow-xl"
                       />
                     ) : (
-                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/90 font-extrabold text-gray-900 ring-4 ring-white/70 shadow-md">
+                      <div className="grid h-20 w-20 place-items-center rounded-3xl bg-white/90 text-2xl font-extrabold text-gray-900 ring-4 ring-white/70 shadow-xl">
                         {initials(displayName)}
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 mb-4">
                       <div className="min-w-0">
-                        <p className="truncate text-lg font-extrabold text-white drop-shadow-sm">
+                        <p className="truncate text-xl font-extrabold text-white drop-shadow-lg">
                           {displayName}
                         </p>
-                        <p className="truncate text-sm text-white/90">
+                        <p className="truncate text-sm text-white/90 font-semibold">
                           @{user?.username ?? clerkUser?.username ?? "—"}
                         </p>
                       </div>
 
                       <Button
                         variant="secondary"
-                        className="h-9 rounded-xl bg-white/95 text-gray-900 shadow-sm hover:bg-white hover:cursor-pointer"
+                        className="h-10 rounded-2xl bg-white/95 text-gray-900 shadow-lg hover:bg-white hover:cursor-pointer font-bold border-2 border-white/50"
                         onClick={() => logout()}
                       >
-                        Logout
+                        Гарах
                       </Button>
                     </div>
 
-                    <div className="mt-4 flex flex-wrap items-center gap-2 ">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
-                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                        {user?.role ?? "RENTER"}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2 text-xs font-bold text-white ring-2 ring-white/25 backdrop-blur-md shadow-lg">
+                        <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse shadow-lg shadow-emerald-400/50" />
+                        ТҮРЭЭСЛЭГЧ
                       </span>
 
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
-                        <span className="h-2 w-2 rounded-full bg-yellow-300" />
-                        Verified
+                      <span className="inline-flex items-center gap-2 rounded-2xl bg-white/15 px-4 py-2 text-xs font-bold text-white ring-2 ring-white/25 backdrop-blur-md shadow-lg">
+                        <span className="h-2.5 w-2.5 rounded-full bg-yellow-400 shadow-lg shadow-yellow-400/50" />
+                        Баталгаажсан
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5">
-                <div className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="p-6">
+                <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-lg">
                   <InfoRow
-                    icon={<UserIcon className="h-4 w-4" />}
-                    label="Name"
+                    icon={<UserIcon className="h-5 w-5" />}
+                    label="Нэр"
                     value={user?.name}
                   />
                   <InfoRow
-                    icon={<Mail className="h-4 w-4" />}
-                    label="Email"
+                    icon={<Mail className="h-5 w-5" />}
+                    label="Имэйл"
                     value={
                       user?.email ??
                       clerkUser?.primaryEmailAddress?.emailAddress ??
@@ -487,36 +522,36 @@ export default function ProfilePage() {
                     }
                   />
                   <InfoRow
-                    icon={<Phone className="h-4 w-4" />}
-                    label="Phone"
+                    icon={<Phone className="h-5 w-5" />}
+                    label="Утас"
                     value={user?.phone}
                   />
                   <InfoRow
-                    icon={<Info className="h-4 w-4" />}
-                    label="About"
+                    icon={<Info className="h-5 w-5" />}
+                    label="Дэлгэрэнгүй"
                     value={user?.about}
                   />
                 </div>
 
-                <Link href="/profile/rental-history" className="mt-4 block">
-                  <Button className="h-11 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-md hover:opacity-95">
-                    Rental History →
+                <Link href="/profile/rental-history" className="mt-5 block">
+                  <Button className="h-12 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-xl hover:opacity-95 font-bold text-base transition-all hover:scale-[1.02]">
+                    Түрээсийн түүх →
                   </Button>
                 </Link>
               </div>
             </aside>
 
-            <section className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-              <div className="p-5 border-b flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-md">
-                    <Bookmark className="w-5 h-5 text-white" />
+            <section className="bg-white rounded-3xl border-2 border-gray-200 shadow-2xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-blue-50 to-teal-50 border-b-2 border-gray-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <Bookmark className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900">
+                    <h1 className="text-2xl font-bold text-gray-900">
                       Хадгалсан зарууд
                     </h1>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 font-medium">
                       Таны хадгалсан бүх зарууд энд байна
                     </p>
                   </div>
@@ -525,84 +560,87 @@ export default function ProfilePage() {
                 {searchQuery.trim() && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 hover:cursor-pointer rounded-xl bg-blue-100 px-3 py-1.5 hover:bg-blue-200 transition-colors"
+                    className="text-sm text-blue-700 hover:text-blue-800 font-bold flex items-center gap-2 hover:cursor-pointer rounded-2xl bg-blue-100 px-4 py-2.5 hover:bg-blue-200 transition-all border-2 border-blue-300 shadow-sm"
                   >
                     <X className="w-4 h-4" />
-                    Хайлт цэвэрлэх
+                    Цэвэрлэх
                   </button>
                 )}
               </div>
 
-              <div className="p-4 border-b">
-                <div className="relative flex bg-gray-100 rounded-full p-1 shadow-inner w-full max-w-[360px]">
+              <div className="p-5 border-b-2 border-gray-200 bg-gray-50">
+                <div className="relative flex bg-white rounded-2xl p-1.5 shadow-lg border-2 border-gray-200 w-full max-w-md">
                   <div
-                    className={`absolute top-1 left-1 h-[calc(100%-0.5rem)] w-1/3 rounded-full bg-white shadow transition-transform duration-300 ease-out ${pillClass}`}
+                    className={`absolute top-1.5 left-1.5 h-[calc(100%-0.75rem)] w-1/3 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 shadow-lg transition-transform duration-300 ease-out ${pillClass}`}
                   />
                   <button
                     onClick={() => setActive("all")}
-                    className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
+                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-xl hover:cursor-pointer ${
                       active === "all"
-                        ? "text-gray-900"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "text-white"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     Бүгд
                   </button>
                   <button
                     onClick={() => setActive("buy")}
-                    className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
+                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-xl hover:cursor-pointer ${
                       active === "buy"
-                        ? "text-gray-900"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "text-white"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     Авах
                   </button>
                   <button
                     onClick={() => setActive("rent")}
-                    className={`relative z-10 flex-1 px-5 py-2 text-sm font-medium transition-colors hover:cursor-pointer ${
+                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-xl hover:cursor-pointer ${
                       active === "rent"
-                        ? "text-gray-900"
-                        : "text-gray-500 hover:text-gray-700"
+                        ? "text-white"
+                        : "text-gray-600 hover:text-gray-900"
                     }`}
                   >
                     Түрээс
                   </button>
                 </div>
 
-                <p className="text-sm text-gray-600 mt-4">
-                  <span className="font-semibold text-gray-900">
+                <p className="text-sm text-gray-700 mt-5 font-semibold">
+                  <span className="text-lg font-bold text-teal-600">
                     {filtered.length}
                   </span>{" "}
                   зар олдлоо
                 </p>
               </div>
 
-              <div className="p-5">
+              <div className="p-6">
                 {loading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                       <div
                         key={i}
-                        className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse border"
+                        className="bg-white rounded-3xl overflow-hidden shadow-md animate-pulse border-2 border-gray-200"
                       >
-                        <div className="h-56 bg-gray-200" />
-                        <div className="p-4 space-y-3">
-                          <div className="h-6 bg-gray-200 rounded w-1/2" />
-                          <div className="h-4 bg-gray-200 rounded w-3/4" />
-                          <div className="h-4 bg-gray-200 rounded w-full" />
+                        <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300" />
+                        <div className="p-6 space-y-4">
+                          <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
+                          <div className="h-6 bg-gray-200 rounded-xl w-full" />
+                          <div className="h-6 bg-gray-200 rounded-xl w-4/5" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="text-center py-16">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <div className="text-center py-20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                      <Bookmark className="w-12 h-12 text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
                       {searchQuery.trim()
                         ? "Хайлтаар зар олдсонгүй"
                         : "Хадгалсан зар байхгүй байна"}
                     </h3>
-                    <p className="text-gray-500 mb-6">
+                    <p className="text-gray-600 mb-8 text-lg">
                       {searchQuery.trim()
                         ? "Хайлтын үгээ өөрчилж үзнэ үү"
                         : "Та зар хадгалснаар энд харагдана"}
@@ -610,7 +648,7 @@ export default function ProfilePage() {
                     {!searchQuery.trim() && (
                       <Link
                         href="/"
-                        className="inline-block px-6 py-2.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors"
+                        className="inline-block px-8 py-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-2xl font-bold hover:from-teal-700 hover:to-teal-600 transition-all shadow-lg shadow-teal-500/30 hover:scale-105"
                       >
                         Зарууд үзэх
                       </Link>
@@ -629,11 +667,11 @@ export default function ProfilePage() {
                               e.stopPropagation();
                               removeSaved(listing.id);
                             }}
-                            className="bg-white/95 backdrop-blur p-2.5 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer"
+                            className="bg-white/95 backdrop-blur-md p-3 rounded-2xl shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 hover:cursor-pointer border-2 border-white/50"
                             aria-label="Remove saved"
                             title="Хадгалснаас устгах"
                           >
-                            <Bookmark className="w-5 h-5 fill-blue-200 text-blue-500" />
+                            <Bookmark className="w-5 h-5 fill-blue-500 text-blue-600" />
                           </button>
                         }
                       />
@@ -645,76 +683,62 @@ export default function ProfilePage() {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6">
-            {/* LANDLORD SIDEBAR - FIRE */}
-            <aside className="relative overflow-hidden rounded-3xl border bg-white shadow-[0_10px_35px_-20px_rgba(0,0,0,0.35)]">
-              {/* gradient header */}
-              <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-b-2xl" />
-              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-2xl" />
-              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-2xl" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-8">
+            <aside className="relative overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-2xl h-140 ">
+              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-b-3xl" />
+              <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/20 blur-3xl" />
+              <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/15 blur-3xl" />
 
-              <div className="relative p-5 pt-6">
-                <div className="flex items-start gap-4">
+              <div className="relative p-6 pt-8 ">
+                <div className="flex items-start gap-4  ">
                   <div className="shrink-0">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
                         alt="avatar"
-                        className="h-16 w-16 rounded-2xl object-cover ring-4 ring-white/70 shadow-md"
+                        className="h-20 w-20 rounded-3xl object-cover ring-4 ring-white/70 shadow-xl"
                       />
                     ) : (
-                      <div className="grid h-16 w-16 place-items-center rounded-2xl bg-white/90 font-extrabold text-gray-900 ring-4 ring-white/70 shadow-md">
+                      <div className="grid h-20 w-20 place-items-center rounded-3xl bg-white/90 text-2xl font-extrabold text-gray-900 ring-4 ring-white/70 shadow-xl">
                         {initials(displayName)}
                       </div>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 mb-4">
                       <div className="min-w-0">
-                        <p className="truncate text-lg font-extrabold text-white drop-shadow-sm">
+                        <p className="truncate text-xl font-extrabold text-white drop-shadow-lg">
                           {displayName}
                         </p>
-                        <p className="truncate text-sm text-white/90">
+                        <p className="truncate text-sm text-white/90 font-semibold">
                           @{user?.username ?? clerkUser?.username ?? "—"}
                         </p>
                       </div>
 
                       <Button
                         variant="secondary"
-                        className="h-9 rounded-xl bg-white/95 text-gray-900 shadow-sm hover:bg-white hover:cursor-pointer"
+                        className="h-10 rounded-2xl bg-white/95 text-gray-900 shadow-lg hover:bg-white hover:cursor-pointer font-bold border-2 border-white/50"
                         onClick={() => logout()}
                       >
-                        Logout
+                        Гарах
                       </Button>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
-                        <span className="h-2 w-2 rounded-full bg-amber-300" />
-                        LANDLORD
-                      </span>
-
-                      <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/25 backdrop-blur">
-                        <span className="h-2 w-2 rounded-full bg-emerald-300" />
-                        Active
-                      </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="p-5">
-                <div className="rounded-2xl border bg-white p-4 shadow-sm">
+              <div className="p-6">
+                <div className="rounded-3xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-5 shadow-lg">
                   <InfoRow
-                    icon={<UserIcon className="h-4 w-4" />}
-                    label="Name"
+                    icon={<UserIcon className="h-5 w-5" />}
+                    label="Нэр"
                     value={user?.name}
                   />
                   <InfoRow
-                    icon={<Mail className="h-4 w-4" />}
-                    label="Email"
+                    icon={<Mail className="h-5 w-5" />}
+                    label="Имэйл"
                     value={
                       user?.email ??
                       clerkUser?.primaryEmailAddress?.emailAddress ??
@@ -722,37 +746,38 @@ export default function ProfilePage() {
                     }
                   />
                   <InfoRow
-                    icon={<Phone className="h-4 w-4" />}
-                    label="Phone"
+                    icon={<Phone className="h-5 w-5" />}
+                    label="Утас"
                     value={user?.phone}
                   />
                   <InfoRow
-                    icon={<Info className="h-4 w-4" />}
-                    label="About"
+                    icon={<Info className="h-5 w-5" />}
+                    label="Дэлгэрэнгүй"
                     value={user?.about}
                   />
                 </div>
 
-                <Link href="/LandLord/createListing" className="mt-4 block">
-                  <Button className="h-11 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-md hover:opacity-95">
-                    + Create New Listing
+                <Link href="/LandLord/createListing" className="mt-5 block">
+                  <Button className="h-12 hover:cursor-pointer w-full rounded-2xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-xl hover:opacity-95 font-bold text-base transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <Plus className="w-5 h-5" />
+                    Шинэ зар нэмэх
                   </Button>
                 </Link>
               </div>
             </aside>
 
-            {/* LANDLORD MAIN - FIRE */}
-            <section className="bg-white rounded-3xl border shadow-sm overflow-hidden">
-              <div className="p-5 border-b flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-md">
-                    <Home className="w-5 h-5 text-white" />
+            {/* LANDLORD MAIN */}
+            <section className="bg-white rounded-3xl border-2 border-gray-200 shadow-2xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-gray-200 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                    <Home className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900">
+                    <h1 className="text-2xl font-bold text-gray-900">
                       Миний зарууд
                     </h1>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 font-medium">
                       Зөвхөн таны оруулсан зарууд энд харагдана
                     </p>
                   </div>
@@ -760,28 +785,27 @@ export default function ProfilePage() {
 
                 <Link
                   href="/LandLord/createListing"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-md hover:opacity-95 transition"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/30 hover:from-emerald-700 hover:to-teal-700 transition-all hover:scale-105"
                 >
-                  <Plus className="w-4 h-4" />
-                  New listing
+                  <Plus className="w-5 h-5" />
+                  Шинэ зар
                 </Link>
               </div>
 
-              {/* toolbar */}
-              <div className="p-4 border-b flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <div className="relative w-full md:max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="p-5 border-b-2 border-gray-200 bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="relative w-full md:max-w-md">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Зар хайх (title / address)..."
+                    placeholder="Гарчиг эсвэл хаягаар хайх..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2.5 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-gray-50"
+                    className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white shadow-sm font-medium"
                   />
                   {searchQuery.trim() && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-gray-200 transition"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl hover:bg-gray-100 transition"
                       aria-label="Clear search"
                       title="Хайлт цэвэрлэх"
                     >
@@ -791,8 +815,8 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="flex items-center justify-between md:justify-end gap-3">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-semibold text-gray-900">
+                  <p className="text-sm text-gray-700 font-semibold">
+                    <span className="text-lg font-bold text-teal-600">
                       {filtered.length}
                     </span>{" "}
                     зар
@@ -801,7 +825,7 @@ export default function ProfilePage() {
                   {searchQuery.trim() && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="text-sm font-medium flex items-center gap-1 rounded-2xl bg-teal-50 px-3 py-2 text-teal-700 hover:bg-teal-100 transition hover:cursor-pointer border"
+                      className="text-sm font-bold flex items-center gap-2 rounded-2xl bg-teal-100 px-4 py-2 text-teal-700 hover:bg-teal-200 transition hover:cursor-pointer border-2 border-teal-300 shadow-sm"
                     >
                       <X className="w-4 h-4" />
                       Цэвэрлэх
@@ -810,43 +834,45 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* content */}
-              <div className="p-5">
+              <div className="p-6">
                 {loading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                       <div
                         key={i}
-                        className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse border"
+                        className="bg-white rounded-3xl overflow-hidden shadow-md animate-pulse border-2 border-gray-200"
                       >
-                        <div className="h-56 bg-gray-200" />
-                        <div className="p-4 space-y-3">
-                          <div className="h-6 bg-gray-200 rounded w-1/2" />
-                          <div className="h-4 bg-gray-200 rounded w-3/4" />
-                          <div className="h-4 bg-gray-200 rounded w-full" />
+                        <div className="h-64 bg-gradient-to-br from-gray-200 to-gray-300" />
+                        <div className="p-6 space-y-4">
+                          <div className="h-8 bg-gray-200 rounded-xl w-2/3" />
+                          <div className="h-6 bg-gray-200 rounded-xl w-full" />
+                          <div className="h-6 bg-gray-200 rounded-xl w-4/5" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="text-center py-16">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  <div className="text-center py-20">
+                    <div className="w-24 h-24 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/30">
+                      <Building2 className="w-12 h-12 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
                       {searchQuery.trim()
                         ? "Хайлтаар зар олдсонгүй"
                         : "Оруулсан зар байхгүй байна"}
                     </h3>
-                    <p className="text-gray-500 mb-6">
+                    <p className="text-gray-600 mb-8 text-lg">
                       {searchQuery.trim()
                         ? "Хайлтын үгээ өөрчилж үзнэ үү"
-                        : "New listing дарж зараа оруулаарай"}
+                        : "Шинэ зар дарж өөрийн зараа оруулаарай"}
                     </p>
 
                     {!searchQuery.trim() && (
                       <Link
                         href="/LandLord/createListing"
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold shadow-md hover:opacity-95 transition"
+                        className="inline-flex items-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/30 hover:from-emerald-700 hover:to-teal-700 transition-all hover:scale-105"
                       >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-5 h-5" />
                         Зар нэмэх
                       </Link>
                     )}
