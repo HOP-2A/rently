@@ -6,7 +6,6 @@ export async function GET(
   context: { params: { userId: string } },
 ) {
   const { userId } = await context.params;
-  console.log(userId, "userId");
   if (!userId || userId === "undefined") {
     return NextResponse.json([], { status: 200 });
   }
