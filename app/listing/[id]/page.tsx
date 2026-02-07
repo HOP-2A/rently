@@ -482,7 +482,7 @@ export default function Page() {
               <div className="text-lg font-bold">Холбогдох</div>
 
               <div
-                className="mt-5 flex items-center gap-4"
+                className="mt-5 flex items-center gap-4 cursor-pointer rounded-lg p-2 transition hover:bg-gray-100"
                 onClick={() => router.push(`/user/${owner?.id}`)}
               >
                 <div className="w-16 h-16 rounded-2xl border flex items-center justify-center overflow-hidden bg-gray-50">

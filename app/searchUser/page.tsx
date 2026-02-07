@@ -222,7 +222,9 @@ export default function Page() {
                     router.push(`/user/${u.id}`);
                   }
                 }}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md hover:cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal-100"
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition 
+hover:shadow-md hover:cursor-pointer hover:bg-slate-50 
+focus:outline-none focus:ring-4 focus:ring-teal-100"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
