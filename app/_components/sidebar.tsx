@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
-import { useAuth } from "@/providers/authProvider"; // <- adjust if your path differs
+import { useAuth } from "@/providers/authProvider";
 import {
   Home,
   Bookmark,
@@ -11,6 +11,7 @@ import {
   Plus,
   type LucideIcon,
   Album,
+  Search,
 } from "lucide-react";
 
 type SidebarItem = {
@@ -32,6 +33,7 @@ const sidebarItems: SidebarItem[] = [
     landlordOnly: true,
   },
   { id: "album", href: "/rentalRequest", icon: Album, landlordOnly: true },
+  { id: "search", href: "/searchUser", icon: Search },
 ];
 
 export default function Sidebar() {

@@ -38,7 +38,7 @@ type RentMini = {
   status: RentStatus;
   startAt: string;
   endAt: string | null;
-  reviews: ReviewMini[]; // take:1 already
+  reviews: ReviewMini[];
 };
 
 type HistoryItem = {
