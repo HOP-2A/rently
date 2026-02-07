@@ -35,6 +35,11 @@ enum RentalRequestStatus {
   CANCELED
 }
 
+enum RentalRequestType {
+  RENT_REQUEST
+  BUY_REQUEST
+}
+
 model User {
   id       String @id @default(nanoid())
   clerkId  String @unique
@@ -190,6 +195,8 @@ model RentalRequest {
   renterId String
   renter   User   @relation("RentalRequestsSent", fields: [renterId], references: [id], onDelete: Cascade)
 
+  type RentalRequestType @default(RENT_REQUEST)
+
   message        String
   phone          String?
   moveInDate     DateTime?
@@ -210,4 +217,5 @@ model RentalRequest {
   @@index([renterId])
   @@index([status])
   @@index([createdAt])
+  @@index([type])
 }

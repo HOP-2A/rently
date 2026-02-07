@@ -3,19 +3,10 @@ import { NextResponse } from "next/server";
 
 type Params = { landLordId: string };
 
-function isPrismaError(e: unknown): e is { code?: string; message: string } {
-  return (
-    typeof e === "object" &&
-    e !== null &&
-    "message" in e &&
-    typeof (e as { message: unknown }).message === "string"
-  );
-}
-
 export async function GET(_req: Request, context: { params: Promise<Params> }) {
   try {
     const { landLordId } = await context.params;
-    const cleanId = landLordId.trim();
+    const cleanId = landLordId?.trim();
 
     if (!cleanId) {
       return NextResponse.json(
@@ -26,28 +17,59 @@ export async function GET(_req: Request, context: { params: Promise<Params> }) {
 
     const listings = await prisma.listing.findMany({
       where: { ownerId: cleanId },
-      include: {
-        owner: true,
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        title: true,
+        address: true,
+        price: true,
+        ownerId: true,
+        createdAt: true,
+
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            email: true,
+            phone: true,
+          },
+        },
+
         rentalRequests: {
-          include: { renter: true },
           orderBy: { createdAt: "desc" },
+          select: {
+            id: true,
+            type: true,
+            status: true,
+            message: true,
+            phone: true,
+            moveInDate: true,
+            durationMonths: true,
+            createdAt: true,
+            renterId: true,
+            renter: {
+              select: {
+                id: true,
+                username: true,
+                name: true,
+                email: true,
+                phone: true,
+              },
+            },
+          },
         },
       },
-      orderBy: { createdAt: "desc" },
     });
 
     return NextResponse.json(listings);
   } catch (e: unknown) {
     console.error(e);
-
-    const message = isPrismaError(e) ? e.message : "Unknown error";
-    const code =
-      typeof e === "object" && e !== null && "code" in e
-        ? String((e as { code?: unknown }).code ?? "")
-        : "";
-
     return NextResponse.json(
-      { error: "Server error", message, code },
+      {
+        error: "Server error",
+        message: e instanceof Error ? e.message : "Unknown error",
+      },
       { status: 500 },
     );
   }

@@ -4,13 +4,19 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+export type RequestType = "RENT_REQUEST" | "BUY_REQUEST";
+
 type RentalRequestPayload = {
   listingId: string;
   landlordId: string;
   renterId: string;
+
+  type: RequestType;
   message: string;
+
   moveInDate?: string | null;
   durationMonths?: number | null;
+
   phone?: string | null;
 };
 
@@ -22,6 +28,10 @@ type Props = {
 
   listingTitle?: string;
   defaultPhone?: string | null;
+
+  requestType: RequestType;
+  buttonLabel?: string;
+  modalTitle?: string;
 
   redirectTo?: string;
 };
@@ -48,9 +58,25 @@ export default function RentalRequestButton({
   disabled,
   listingTitle,
   defaultPhone,
+  requestType,
+  buttonLabel,
+  modalTitle,
   redirectTo = "/",
 }: Props) {
   const router = useRouter();
+
+  const isRent = requestType === "RENT_REQUEST";
+
+  const title =
+    modalTitle ?? (isRent ? "Түрээслэх хүсэлт" : "Худалдаж авах хүсэлт");
+
+  const btnText =
+    buttonLabel ??
+    (isRent ? "Түрээслэх хүсэлт илгээх" : "Худалдаж авах хүсэлт илгээх");
+
+  const placeholderMsg = isRent
+    ? "Сайн байна уу? Байрыг хэдэн сараар түрээслэх боломжтой вэ? ..."
+    : "Сайн байна уу? Байрыг худалдаж авах талаар ярилцъя. Үнэ хэлэлцэх боломжтой юу? ...";
 
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -67,15 +93,19 @@ export default function RentalRequestButton({
     if (!listingId || !landlordId || !renterId) return false;
 
     const okMessage = message.trim().length >= 5;
+
+    const digitsOnly = phone.replace(/\D/g, "");
+    const okPhone = digitsOnly.length === 8;
+
+    if (!isRent) return okMessage && okPhone;
+
     const okDate = moveInDate.trim().length > 0;
+
     const durationNum = Number(durationMonths);
     const okDuration =
       Number.isFinite(durationNum) &&
       durationNum > 0 &&
       Number.isInteger(durationNum);
-
-    const digitsOnly = phone.replace(/\D/g, "");
-    const okPhone = digitsOnly.length === 8;
 
     return okMessage && okDate && okDuration && okPhone;
   }, [
@@ -84,9 +114,10 @@ export default function RentalRequestButton({
     landlordId,
     renterId,
     message,
+    phone,
+    isRent,
     moveInDate,
     durationMonths,
-    phone,
   ]);
 
   const close = () => {
@@ -115,10 +146,17 @@ export default function RentalRequestButton({
       listingId,
       landlordId,
       renterId,
+      type: requestType,
+
       message: message.trim(),
-      moveInDate: moveInDate || null,
-      durationMonths: durationMonths ? Number(durationMonths) : null,
       phone: digitsOnly || null,
+
+      moveInDate: isRent ? moveInDate || null : null,
+      durationMonths: isRent
+        ? durationMonths
+          ? Number(durationMonths)
+          : null
+        : null,
     };
 
     try {
@@ -138,11 +176,7 @@ export default function RentalRequestButton({
         throw new Error(msg);
       }
 
-      if (isApiOk(data)) {
-        setSuccess("✅ Хүсэлт амжилттай илгээгдлээ!");
-      } else {
-        setSuccess("✅ Хүсэлт илгээгдлээ!");
-      }
+      setSuccess("✅ Хүсэлт амжилттай илгээгдлээ!");
 
       toast.success("Хүсэлт илгээгдлээ", {
         description: listingTitle ? `Зар: ${listingTitle}` : undefined,
@@ -172,7 +206,7 @@ export default function RentalRequestButton({
         `}
         title={disabled ? "Нэвтэрсний дараа хүсэлт илгээнэ" : undefined}
       >
-        Түрээслэх хүсэлт илгээх
+        {btnText}
       </button>
 
       {open && (
@@ -180,9 +214,7 @@ export default function RentalRequestButton({
           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden border">
             <div className="p-6 border-b flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h3 className="text-xl font-bold leading-tight">
-                  Түрээслэх хүсэлт
-                </h3>
+                <h3 className="text-xl font-bold leading-tight">{title}</h3>
                 <p className="mt-1 text-sm text-gray-600 truncate">
                   Зар:{" "}
                   <span className="font-semibold">{listingTitle ?? "—"}</span>
@@ -218,7 +250,7 @@ export default function RentalRequestButton({
                 <textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Сайн байна уу? Байрыг хэдэн сараар түрээслэх боломжтой вэ? ..."
+                  placeholder={placeholderMsg}
                   className="mt-2 w-full min-h-[120px] rounded-2xl border px-4 py-3 outline-none focus:ring-2 focus:ring-gray-200"
                 />
                 <div className="text-xs text-gray-500 mt-1">
@@ -226,33 +258,35 @@ export default function RentalRequestButton({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-semibold">Нүүж орох *</label>
-                  <input
-                    type="date"
-                    value={moveInDate}
-                    onChange={(e) => setMoveInDate(e.target.value)}
-                    className="mt-2 w-full rounded-2xl border px-4 py-3 outline-none focus:ring-2 focus:ring-gray-200"
-                  />
-                </div>
+              {isRent && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="text-sm font-semibold">Нүүж орох *</label>
+                    <input
+                      type="date"
+                      value={moveInDate}
+                      onChange={(e) => setMoveInDate(e.target.value)}
+                      className="mt-2 w-full rounded-2xl border px-4 py-3 outline-none focus:ring-2 focus:ring-gray-200"
+                    />
+                  </div>
 
-                <div>
-                  <label className="text-sm font-semibold">
-                    Хугацаа (сар) *
-                  </label>
-                  <input
-                    inputMode="numeric"
-                    value={durationMonths}
-                    onChange={(e) => {
-                      const next = e.target.value.replace(/[^\d]/g, "");
-                      setDurationMonths(next);
-                    }}
-                    placeholder="6"
-                    className="mt-2 w-full rounded-2xl border px-4 py-3 outline-none focus:ring-2 focus:ring-gray-200"
-                  />
+                  <div>
+                    <label className="text-sm font-semibold">
+                      Хугацаа (сар) *
+                    </label>
+                    <input
+                      inputMode="numeric"
+                      value={durationMonths}
+                      onChange={(e) => {
+                        const next = e.target.value.replace(/[^\d]/g, "");
+                        setDurationMonths(next);
+                      }}
+                      placeholder="6"
+                      className="mt-2 w-full rounded-2xl border px-4 py-3 outline-none focus:ring-2 focus:ring-gray-200"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <label className="text-sm font-semibold">

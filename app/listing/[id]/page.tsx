@@ -10,10 +10,13 @@ import { useAuth } from "@/providers/authProvider";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import RentalRequestButton from "@/app/_components/RentalRequestButton";
+
+import RentalRequestButton, {
+  type RequestType,
+} from "@/app/_components/RentalRequestButton";
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
-export type ListingKind = "RENT" | "SALE" | "RENT" | "SALE" | "RENT" | "SALE";
+export type ListingKind = "RENT" | "SALE";
 
 export type OwnerFromApi = {
   id: string;
@@ -64,7 +67,8 @@ export type ListingFromApi = {
 
   owner?: OwnerFromApi | null;
 
-  Kind: "SALE" | "RENT";
+  kind: ListingKind;
+
   isSaved: boolean;
 
   reviews?: ReviewFromApi[];
@@ -180,6 +184,17 @@ export default function Page() {
   const isRented = useMemo(() => {
     if (!listing) return false;
     return listing.isActive === false || Boolean(listing.currentRentId);
+  }, [listing]);
+  const isSale = listing?.kind === "SALE";
+
+  const isDealDone = useMemo(() => {
+    if (!listing) return false;
+
+    if (listing.kind === "RENT") {
+      return listing.isActive === false || Boolean(listing.currentRentId);
+    }
+
+    return listing.isActive === false;
   }, [listing]);
 
   const fetchIsSaved = async (userId: string, listingId: string) => {
@@ -328,6 +343,8 @@ export default function Page() {
       </div>
     );
   }
+  const requestType: RequestType =
+    listing.kind === "RENT" ? "RENT_REQUEST" : "BUY_REQUEST";
 
   const reviews = listing.reviews ?? [];
   const ratingAvg =
@@ -447,8 +464,13 @@ export default function Page() {
                     label={listing.isActive ? "ИДЭВХИТЭЙ" : "ИДЭВХГҮЙ"}
                     tone={listing.isActive ? "green" : "gray"}
                   />
-                  {isRented ? (
-                    <StatusPill label="ТҮРЭЭССЭН" tone="red" />
+                  {isDealDone ? (
+                    <StatusPill
+                      label={
+                        listing.kind === "RENT" ? "ТҮРЭЭССЭН" : "ЗАРАГДСАН"
+                      }
+                      tone="red"
+                    />
                   ) : null}
                 </div>
               </div>
@@ -524,9 +546,11 @@ export default function Page() {
                   </div>
                 </div>
 
-                {isRented ? (
+                {isDealDone ? (
                   <div className="w-full px-4 py-3 rounded-xl font-semibold border bg-gray-50 text-gray-600">
-                    Энэ байр түрээслэгдсэн байна.
+                    {listing.kind === "RENT"
+                      ? "Энэ байр түрээслэгдсэн байна."
+                      : "Энэ зар зарагдсан байна."}
                   </div>
                 ) : (
                   <RentalRequestButton
@@ -536,6 +560,17 @@ export default function Page() {
                     disabled={!user?.id}
                     listingTitle={listing.title}
                     defaultPhone={user?.phone ?? null}
+                    requestType={requestType}
+                    buttonLabel={
+                      listing.kind === "RENT"
+                        ? "Түрээслэх хүсэлт илгээх"
+                        : "Худалдаж авах хүсэлт илгээх"
+                    }
+                    modalTitle={
+                      listing.kind === "RENT"
+                        ? "Түрээслэх хүсэлт"
+                        : "Худалдаж авах хүсэлт"
+                    }
                   />
                 )}
 
@@ -626,7 +661,7 @@ export default function Page() {
             <div className="border rounded-2xl p-4">
               <div className="text-xs text-gray-500 mb-1">Төрөл</div>
               <div className="text-2xl font-semibold">
-                {String(listing?.Kind)}
+                {String(listing?.kind)}
               </div>
             </div>
 
