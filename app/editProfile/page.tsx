@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Upload, X, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
   const [username, setUsername] = useState("");
@@ -10,7 +11,7 @@ export default function Page() {
   const [phone, setPhone] = useState("");
   const [about, setAbout] = useState("");
   const [avatar, setAvatar] = useState("");
-
+  const router = useRouter();
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -22,6 +23,17 @@ export default function Page() {
     setAbout("");
     setAvatar("");
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const onlyDigits = (s: string) => s.replace(/\D/g, "");
+  const back = () => {
+    router.push("/profile");
+  };
+  const validatePhone8 = (raw: string) => {
+    const digits = onlyDigits(raw);
+    if (digits.length === 0) return { ok: true, digits: "" };
+    if (digits.length !== 8) return { ok: false, digits };
+    return { ok: true, digits };
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +79,29 @@ export default function Page() {
   };
 
   async function onSave() {
+    if (!username.trim()) {
+      toast.error("Username хоосон байж болохгүй");
+      return;
+    }
+    if (!name.trim()) {
+      toast.error("Нэр хоосон байж болохгүй");
+      return;
+    }
+    if (!about.trim()) {
+      toast.error("About хоосон байж болохгүй");
+      return;
+    }
+    if (!avatar) {
+      toast.error("Profile зураг шаардлагатай");
+      return;
+    }
+
+    const v = validatePhone8(phone);
+    if (!v.ok) {
+      toast.error("Утасны дугаар яг 8 оронтой байх ёстой");
+      return;
+    }
+
     setIsSaving(true);
     try {
       const res = await fetch("/api/editProfile", {
@@ -75,19 +110,22 @@ export default function Page() {
         body: JSON.stringify({
           username,
           name,
-          phone,
+          phone: v.digits,
           about,
           avatar,
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        toast.error("Алдаа гарлаа");
+        toast.error(data.error || "Алдаа гарлаа");
         return;
       }
 
       toast.success("Амжилттай хадгалагдлаа ✅");
-      resetForm(); // ✅ SAVE амжилттай бол бүгдийг хоослоно
+
+      router.push("/profile");
     } catch (e) {
       toast.error("Сүлжээний алдаа");
     } finally {
@@ -97,6 +135,12 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50/30 p-6">
+      <button
+        className="inline-flex items-center gap-2 px-4 py-2 border rounded-xl hover:bg-gray-50 hover:cursor-pointer mt-10 ml-10 bg-white"
+        onClick={back}
+      >
+        ← Буцах
+      </button>
       <div className="mx-auto w-full max-w-md">
         <div className="rounded-3xl border-2 border-gray-100 bg-white shadow-lg shadow-gray-200/50">
           <div className="rounded-t-3xl bg-gradient-to-r from-teal-500 to-teal-600 p-5 text-white">
@@ -218,10 +262,21 @@ export default function Page() {
               <div className="mb-1 text-xs font-bold text-gray-700">Утас</div>
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  const digits = onlyDigits(e.target.value);
+                  setPhone(digits.slice(0, 8));
+                }}
                 placeholder="9911xxxx"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={8}
                 className="h-12 w-full rounded-xl border-2 border-gray-200 px-4 text-sm outline-none focus:border-teal-500"
               />
+              <div className="mt-1 text-[11px] text-gray-500">
+                {phone.length > 0
+                  ? `${phone.length}/8`
+                  : "8 оронтой дугаар оруулна"}
+              </div>
             </div>
 
             <div>

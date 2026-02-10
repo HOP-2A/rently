@@ -118,6 +118,7 @@ function maskPhone(phone: string): string {
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
+// ✅ Leaflet default icon fix (Next дээр marker алга болдог асуудал)
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -138,16 +139,19 @@ export default function Page() {
         ? rawId[0]
         : undefined;
 
+  const router = useRouter();
   const { back } = useRouter();
 
   const { user: clerkUser } = useUser();
   const auth = useAuth(clerkUser?.id);
   const user = auth?.user;
-  const router = useRouter();
+
   const [listing, setListing] = useState<ListingFromApi | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isOwner = Boolean(user?.id && listing?.ownerId === user.id);
 
   const [showPhone, setShowPhone] = useState<boolean>(false);
   const [agreedToPrivacy, setAgreedToPrivacy] = useState<boolean>(false);
@@ -181,12 +185,6 @@ export default function Page() {
     return maskPhone(owner.phone);
   }, [owner?.phone, showPhone, agreedToPrivacy]);
 
-  const isRented = useMemo(() => {
-    if (!listing) return false;
-    return listing.isActive === false || Boolean(listing.currentRentId);
-  }, [listing]);
-  const isSale = listing?.kind === "SALE";
-
   const isDealDone = useMemo(() => {
     if (!listing) return false;
 
@@ -196,6 +194,8 @@ export default function Page() {
 
     return listing.isActive === false;
   }, [listing]);
+
+  const canRevealPhone = Boolean(user?.id && owner?.phone);
 
   const fetchIsSaved = async (userId: string, listingId: string) => {
     const res = await fetch(`/api/getListning/saved/${userId}`, {
@@ -255,6 +255,7 @@ export default function Page() {
   }, [id, user?.id]);
 
   const handleRevealPhone = () => {
+    if (!user?.id) return; // ✅ login шаардлагатай
     if (!agreedToPrivacy) setShowPrivacyModal(true);
     else setShowPhone(true);
   };
@@ -343,6 +344,7 @@ export default function Page() {
       </div>
     );
   }
+
   const requestType: RequestType =
     listing.kind === "RENT" ? "RENT_REQUEST" : "BUY_REQUEST";
 
@@ -357,8 +359,21 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* ✅ Leaflet z-index-ийг дарж modal дээр гаргахгүй болгоно */}
+      <style jsx global>{`
+        .leaflet-container {
+          z-index: 0 !important;
+        }
+        .leaflet-pane,
+        .leaflet-control,
+        .leaflet-top,
+        .leaflet-bottom {
+          z-index: 0 !important;
+        }
+      `}</style>
+
       {showPrivacyModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 sm:p-8">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-bold mb-2">Нууцлалын бодлого</h3>
@@ -515,10 +530,15 @@ export default function Page() {
                   <div className="flex gap-2">
                     {!showPhone || !agreedToPrivacy ? (
                       <button
-                        disabled={!owner?.phone}
+                        disabled={!canRevealPhone}
                         onClick={handleRevealPhone}
+                        title={
+                          !user?.id
+                            ? "Нэвтэрсний дараа дугаарыг харна"
+                            : undefined
+                        }
                         className={`flex-1 hover:cursor-pointer px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 ${
-                          !owner?.phone ? "opacity-50 cursor-not-allowed" : ""
+                          !canRevealPhone ? "opacity-50 cursor-not-allowed" : ""
                         }`}
                       >
                         Дугаар харах
@@ -526,18 +546,27 @@ export default function Page() {
                     ) : (
                       <>
                         <button
+                          disabled={!user?.id}
                           onClick={async () => {
                             if (!owner?.phone) return;
                             await copyToClipboard(owner.phone);
                           }}
-                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-white hover:bg-gray-50 hover:cursor-pointer"
+                          className={`flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-white hover:bg-gray-50 hover:cursor-pointer ${
+                            !user?.id ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         >
                           Хуулах
                         </button>
 
                         <a
-                          href={`tel:${owner?.phone ?? ""}`}
-                          className="flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 text-center hover:cursor-pointer"
+                          href={
+                            user?.id ? `tel:${owner?.phone ?? ""}` : undefined
+                          }
+                          className={`flex-1 px-3 py-2 rounded-xl border text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 text-center ${
+                            !user?.id
+                              ? "opacity-50 pointer-events-none"
+                              : "hover:cursor-pointer"
+                          }`}
                         >
                           Залгах
                         </a>
@@ -552,12 +581,28 @@ export default function Page() {
                       ? "Энэ байр түрээслэгдсэн байна."
                       : "Энэ зар зарагдсан байна."}
                   </div>
+                ) : isOwner ? (
+                  <button
+                    onClick={() =>
+                      router.push("http://localhost:3000/rentalRequest")
+                    }
+                    className="w-full px-4 py-3 rounded-xl font-semibold border bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    Өөрийн зар дээр хүсэлт илгээх боломжгүй
+                  </button>
+                ) : !user?.id ? (
+                  <button
+                    onClick={() => router.push("/sign-in")}
+                    className="w-full px-4 py-3 rounded-xl font-semibold border bg-gray-900 text-white hover:bg-gray-800 hover:cursor-pointer"
+                  >
+                    Нэвтэрч байж хүсэлт илгээнэ
+                  </button>
                 ) : (
                   <RentalRequestButton
                     listingId={listing.id}
                     landlordId={listing.ownerId}
-                    renterId={user?.id ?? ""}
-                    disabled={!user?.id}
+                    renterId={user.id}
+                    disabled={false}
                     listingTitle={listing.title}
                     defaultPhone={user?.phone ?? null}
                     requestType={requestType}
@@ -754,12 +799,13 @@ export default function Page() {
               Энэ зар дээр координат алга байна.
             </div>
           ) : (
-            <div className="w-full overflow-hidden rounded-2xl border">
+            <div className="w-full overflow-hidden rounded-2xl border relative z-0">
               <MapContainer
                 center={center}
                 zoom={16}
                 style={{ height: 520, width: "100%" }}
                 scrollWheelZoom
+                className="z-0"
               >
                 <TileLayer
                   attribution="&copy; OpenStreetMap contributors"

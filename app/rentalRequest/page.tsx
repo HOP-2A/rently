@@ -235,7 +235,6 @@ export default function LandlordRequestsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50/30 via-white to-blue-50/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -305,7 +304,6 @@ export default function LandlordRequestsPage() {
           </div>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mb-6 animate-in slide-in-from-top-2 duration-200">
             <div className="flex items-start gap-3 p-5 bg-gradient-to-r from-red-50 to-red-100/50 border-2 border-red-300 rounded-2xl shadow-lg shadow-red-200/50">
@@ -483,7 +481,6 @@ export default function LandlordRequestsPage() {
             </Card>
           </div>
 
-          {/* Request Details */}
           <div className="lg:col-span-2">
             <Card className="shadow-xl border-2 border-gray-200 rounded-3xl overflow-hidden">
               {!selectedListing ? (
@@ -509,7 +506,6 @@ export default function LandlordRequestsPage() {
                 </div>
               ) : (
                 <>
-                  {/* Header */}
                   <div className="p-6 bg-gradient-to-r from-teal-500 to-teal-600 rounded-2xl">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                       <div className="min-w-0 flex-1">
@@ -604,7 +600,6 @@ export default function LandlordRequestsPage() {
                               `}
                             >
                               <div className="flex flex-col gap-5">
-                                {/* Header */}
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-teal-500/30">
@@ -678,7 +673,6 @@ export default function LandlordRequestsPage() {
                                   </div>
                                 </div>
 
-                                {/* Message */}
                                 {r.message && (
                                   <div className="bg-white rounded-xl p-4 border-2 border-gray-200 shadow-sm">
                                     <p className="text-sm text-gray-700 whitespace-pre-wrap font-medium">
@@ -687,7 +681,6 @@ export default function LandlordRequestsPage() {
                                   </div>
                                 )}
 
-                                {/* Details Grid */}
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                   <div className="bg-white rounded-xl border-2 border-gray-200 p-4 shadow-sm">
                                     <div className="flex items-center gap-2 text-gray-600 mb-2">
@@ -768,7 +761,6 @@ export default function LandlordRequestsPage() {
                                   </div>
                                 </div>
 
-                                {/* Actions */}
                                 {isPending && (
                                   <div className="flex gap-3 pt-2">
                                     <Button
