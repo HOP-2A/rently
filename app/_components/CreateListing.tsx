@@ -1,11 +1,13 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import PickLocationMapOSM from "./PickLocationMapOSM";
-
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -13,10 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card } from "@/components/ui/card";
+
 import {
   MapPin,
-  Star,
   CheckCircle2,
   Lightbulb,
   Upload,
@@ -27,11 +28,22 @@ import {
   Maximize,
   DollarSign,
 } from "lucide-react";
+
 import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { useAuth } from "@/providers/authProvider";
-import PickLocationMap from "./PickLocationMap";
-import { useRouter } from "next/navigation";
+
+// ✅ SSR safe dynamic import (Leaflet / window issue-ээс build унахгүй)
+const PickLocationMapOSM = dynamic(() => import("./PickLocationMapOSM"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[360px] w-full rounded-2xl border-2 border-gray-200 bg-gray-50 flex items-center justify-center text-sm text-gray-500">
+      Map loading...
+    </div>
+  ),
+});
+
+type ListingKind = "SALE" | "RENT";
 
 interface FormData {
   title: string;
@@ -42,7 +54,7 @@ interface FormData {
   lat: number | null;
   lng: number | null;
   photo: string;
-  kind?: "SALE" | "RENT";
+  kind?: ListingKind;
 }
 
 const initialFormData: FormData = {
@@ -57,16 +69,31 @@ const initialFormData: FormData = {
 };
 
 export function CreateListingForm() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [location, setLocation] = useState<string>(formData.address || "");
+  const [location, setLocation] = useState<string>(initialFormData.address);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { user: clerkUser } = useUser();
   const userData = useAuth(clerkUser?.id);
   const user = userData?.user;
+
   const ALL = "All";
-  const { push } = useRouter();
+
+  // ✅ Render дотор push хийхгүй! (build/hydration дээр асуудал гаргадаг)
+  useEffect(() => {
+    if (user?.role === "RENTER") {
+      router.push("/");
+    }
+  }, [user?.role, router]);
+
+  // ✅ location state-г formData.address-тэй sync
+  useEffect(() => {
+    setLocation(formData.address || "");
+  }, [formData.address]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,18 +114,18 @@ export function CreateListingForm() {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch("/api/upload", {
+      const res = await fetch("/api/upload", {
         method: "POST",
         body: uploadFormData,
       });
 
-      if (!response.ok) throw new Error("Upload failed");
+      if (!res.ok) throw new Error("Upload failed");
 
-      const data = await response.json();
+      const data = await res.json();
       setFormData((prev) => ({ ...prev, photo: data.url }));
       toast.success("Зураг амжилттай хуулагдлаа");
-    } catch (error) {
-      console.error("Upload error:", error);
+    } catch (err) {
+      console.error(err);
       toast.error("Зураг хуулахад алдаа гарлаа");
     } finally {
       setIsUploading(false);
@@ -117,11 +144,16 @@ export function CreateListingForm() {
   };
 
   const handleSubmit = async () => {
+    if (!user?.id) {
+      toast.error("Нэвтэрч орно уу");
+      return;
+    }
+
     if (!formData.photo) {
       toast.error("Зураг оруулна уу");
       return;
     }
-    if (!formData.title) {
+    if (!formData.title.trim()) {
       toast.error("Гарчиг оруулна уу");
       return;
     }
@@ -129,14 +161,18 @@ export function CreateListingForm() {
       toast.error("Газрын зураг дээр байршил сонгоно уу");
       return;
     }
+    if (!formData.kind) {
+      toast.error("Төрөл сонгоно уу (Түрээс/Зарах)");
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/bairPost", {
+      const res = await fetch("/api/bairPost", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ownerId: user?.id,
+          ownerId: user.id,
           title: formData.title,
           address: formData.address,
           price: formData.price,
@@ -149,13 +185,11 @@ export function CreateListingForm() {
         }),
       });
 
-      if (response.ok) {
-        toast.success("Амжилттай хадгалагдлаа");
-        push("/");
-        resetForm();
-      } else {
-        toast.error("Алдаа гарлаа");
-      }
+      if (!res.ok) throw new Error("Failed");
+
+      toast.success("Амжилттай хадгалагдлаа");
+      resetForm();
+      router.push("/");
     } catch (error) {
       console.error("Error:", error);
       toast.error("Алдаа гарлаа");
@@ -164,14 +198,9 @@ export function CreateListingForm() {
     }
   };
 
-  if (user?.role === "RENTER") {
-    push("/");
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-teal-50/30 p-4 md:p-8">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Шинэ зар нэмэх
@@ -182,9 +211,8 @@ export function CreateListingForm() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
-          {/* Main Form */}
           <div className="space-y-6">
-            {/* Photo Upload Card */}
+            {/* PHOTO CARD */}
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-teal-100 rounded-xl">
@@ -251,7 +279,7 @@ export function CreateListingForm() {
               )}
             </Card>
 
-            {/* Details Card */}
+            {/* DETAILS CARD */}
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-100 rounded-xl">
@@ -270,14 +298,14 @@ export function CreateListingForm() {
               <div className="space-y-5">
                 <div>
                   <Label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
                     Гарчиг
                   </Label>
                   <Input
                     placeholder="Жишээ нь: 2 өрөө орон сууц, Сүхбаатар дүүрэг"
                     value={formData.title}
                     onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
+                      setFormData((p) => ({ ...p, title: e.target.value }))
                     }
                     className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                   />
@@ -292,7 +320,7 @@ export function CreateListingForm() {
                     <Select
                       value={formData.rooms?.toString() || ""}
                       onValueChange={(value) =>
-                        setFormData({ ...formData, rooms: parseInt(value) })
+                        setFormData((p) => ({ ...p, rooms: parseInt(value) }))
                       }
                     >
                       <SelectTrigger className="border-2 border-gray-200 hover:border-teal-400 rounded-xl h-12 px-4">
@@ -319,8 +347,8 @@ export function CreateListingForm() {
                     </Label>
                     <Select
                       value={formData.kind || ""}
-                      onValueChange={(value: "SALE" | "RENT") =>
-                        setFormData({ ...formData, kind: value })
+                      onValueChange={(value: ListingKind) =>
+                        setFormData((p) => ({ ...p, kind: value }))
                       }
                     >
                       <SelectTrigger className="border-2 border-gray-200 hover:border-teal-400 rounded-xl h-12 px-4">
@@ -347,12 +375,12 @@ export function CreateListingForm() {
                       placeholder="80"
                       value={formData.sizeM2 ?? ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        setFormData((p) => ({
+                          ...p,
                           sizeM2: e.target.value
                             ? parseInt(e.target.value)
                             : null,
-                        })
+                        }))
                       }
                       className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                     />
@@ -366,14 +394,14 @@ export function CreateListingForm() {
                     <Input
                       type="number"
                       placeholder={
-                        formData.kind === "SALE" ? "180,000,000" : "500,000"
+                        formData.kind === "SALE" ? "180000000" : "500000"
                       }
                       value={formData.price || ""}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
+                        setFormData((p) => ({
+                          ...p,
                           price: parseInt(e.target.value) || 0,
-                        })
+                        }))
                       }
                       className="border-2 border-gray-200 focus:border-teal-500 rounded-xl h-12 px-4 text-base"
                     />
@@ -445,7 +473,7 @@ export function CreateListingForm() {
                   <PickLocationMapOSM
                     lat={formData.lat}
                     lng={formData.lng}
-                    onPick={({ lat, lng }) => {
+                    onPick={({ lat, lng }: { lat: number; lng: number }) => {
                       setFormData((prev) => ({ ...prev, lat, lng }));
                       toast.success(
                         `Байршил: ${lat.toFixed(5)}, ${lng.toFixed(5)}`,
@@ -457,7 +485,7 @@ export function CreateListingForm() {
                     {formData.lat != null && formData.lng != null ? (
                       <>
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" />
                           <span className="text-sm text-gray-700">
                             <span className="font-semibold">
                               {formData.lat.toFixed(6)},{" "}
@@ -503,6 +531,7 @@ export function CreateListingForm() {
             </Card>
           </div>
 
+          {/* RIGHT SIDE */}
           <div className="space-y-6">
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 rounded-3xl overflow-hidden">
               <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 rounded-2xl">
@@ -574,7 +603,6 @@ export function CreateListingForm() {
               </div>
             </Card>
 
-            {/* Tips Card */}
             <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 shadow-lg shadow-amber-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 bg-amber-100 rounded-xl">

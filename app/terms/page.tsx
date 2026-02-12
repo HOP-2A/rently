@@ -16,7 +16,6 @@ import {
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50">
-      {/* Header */}
       <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-lg border-b-2 border-gray-200 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -39,9 +38,7 @@ export default function TermsPage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl mb-6 shadow-lg">
             <FileText className="w-6 h-6 text-purple-600" />
@@ -60,9 +57,7 @@ export default function TermsPage() {
           </p>
         </div>
 
-        {/* Content */}
         <div className="space-y-8">
-          {/* Section 1 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
@@ -98,7 +93,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 2 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30 flex-shrink-0">
@@ -170,7 +164,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 3 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/30 flex-shrink-0">
@@ -253,7 +246,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 4 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shadow-amber-500/30 flex-shrink-0">
@@ -306,7 +298,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 5 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-500/30 flex-shrink-0">
@@ -350,7 +341,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Section 6 */}
           <section className="bg-white rounded-3xl border-2 border-gray-200 p-8 shadow-xl">
             <div className="flex items-start gap-4 mb-6">
               <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/30 flex-shrink-0">
@@ -394,7 +384,6 @@ export default function TermsPage() {
             </div>
           </section>
 
-          {/* Footer Note */}
           <div className="bg-gradient-to-r from-teal-50 to-cyan-50 rounded-3xl border-2 border-teal-200 p-8 text-center">
             <h3 className="text-xl font-bold text-gray-900 mb-4">
               Асуулт байна уу?

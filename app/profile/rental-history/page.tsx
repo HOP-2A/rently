@@ -93,7 +93,6 @@ export default function RentalHistoryPage() {
     "ALL" | "PENDING" | "APPROVED" | "REJECTED" | "CANCELED"
   >("ALL");
 
-  // modal
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -138,7 +137,6 @@ export default function RentalHistoryPage() {
   useEffect(() => {
     if (!isLoaded) return;
     void refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
   const filtered = useMemo(() => {
@@ -282,7 +280,6 @@ export default function RentalHistoryPage() {
                 const photo = String(r.listing.photo ?? "").trim();
                 const myReview = r.rent?.reviews?.[0];
 
-                // ✅ review allowed only if rent exists
                 const canReview = Boolean(r.rent?.id);
 
                 return (
@@ -381,7 +378,6 @@ export default function RentalHistoryPage() {
       {open && draft && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm grid place-items-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 animate-in zoom-in-95 duration-200">
-            {/* Header */}
             <div className="flex items-start justify-between gap-3 mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
@@ -415,7 +411,6 @@ export default function RentalHistoryPage() {
               </button>
             </div>
 
-            {/* Rating */}
             <div className="mb-5">
               <label className="text-sm font-semibold text-gray-700 mb-3 block">
                 Үнэлгээ
@@ -453,7 +448,6 @@ export default function RentalHistoryPage() {
               )}
             </div>
 
-            {/* Comment */}
             <div className="mb-5">
               <label className="text-sm font-semibold text-gray-700 mb-3 block">
                 Сэтгэгдэл
@@ -471,7 +465,6 @@ export default function RentalHistoryPage() {
               </div>
             </div>
 
-            {/* Error */}
             {reviewError && (
               <div className="mb-5 text-sm text-red-700 bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-start gap-3 animate-in slide-in-from-top-2 duration-200">
                 <svg
@@ -489,7 +482,6 @@ export default function RentalHistoryPage() {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex justify-end gap-3">
               <Button
                 variant="secondary"

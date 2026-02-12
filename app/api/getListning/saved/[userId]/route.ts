@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function GET(
-  req: Request,
-  context: { params: { userId: string } },
+  _req: NextRequest,
+  { params }: { params: Promise<{ userId: string }> },
 ) {
-  const { userId } = await context.params;
+  const { userId } = await params;
+
   if (!userId || userId === "undefined") {
     return NextResponse.json([], { status: 200 });
   }
@@ -18,14 +19,12 @@ export async function GET(
   const listingIds = savedPosts.map((p) => p.listingId);
 
   if (listingIds.length === 0) {
-    return NextResponse.json([]);
+    return NextResponse.json([], { status: 200 });
   }
 
   const listings = await prisma.listing.findMany({
-    where: {
-      id: { in: listingIds },
-    },
+    where: { id: { in: listingIds } },
   });
 
-  return NextResponse.json(listings);
+  return NextResponse.json(listings, { status: 200 });
 }
