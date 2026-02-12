@@ -60,11 +60,12 @@ export async function GET(
       });
       isSaved = Boolean(saved);
     }
-
     const count = listing.reviews.length;
+
     const avg =
       count > 0
-        ? listing.reviews.reduce((a, r) => a + (r.rating ?? 0), 0) / count
+        ? listing.reviews.reduce((a: number, r) => a + (r.rating ?? 0), 0) /
+          count
         : null;
 
     return NextResponse.json({
