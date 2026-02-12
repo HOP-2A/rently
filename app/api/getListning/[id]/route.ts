@@ -64,8 +64,10 @@ export async function GET(
 
     const avg =
       count > 0
-        ? listing.reviews.reduce((a: number, r) => a + (r.rating ?? 0), 0) /
-          count
+        ? listing.reviews.reduce(
+            (a: number, r: { rating: number | null }) => a + (r.rating ?? 0),
+            0,
+          ) / count
         : null;
 
     return NextResponse.json({
