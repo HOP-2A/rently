@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
+type SavedPostMini = { listingId: string };
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ userId: string }> },
@@ -11,12 +13,12 @@ export async function GET(
     return NextResponse.json([], { status: 200 });
   }
 
-  const savedPosts = await prisma.savedPost.findMany({
+  const savedPosts: SavedPostMini[] = await prisma.savedPost.findMany({
     where: { renterId: userId },
     select: { listingId: true },
   });
 
-  const listingIds = savedPosts.map((p) => p.listingId);
+  const listingIds = savedPosts.map((p: SavedPostMini) => p.listingId);
 
   if (listingIds.length === 0) {
     return NextResponse.json([], { status: 200 });
