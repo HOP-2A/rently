@@ -279,7 +279,6 @@ export function CreateListingForm() {
               )}
             </Card>
 
-            {/* DETAILS CARD */}
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-blue-100 rounded-xl">

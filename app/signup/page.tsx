@@ -14,6 +14,8 @@ import {
   CheckCircle2,
   Shield,
   X,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,200 +134,251 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-blue-50">
-      <header className="sticky top-0 z-20 bg-white/95 backdrop-blur-lg border-b-2 border-gray-200 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-teal-50 via-white to-emerald-50">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-200/30 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "2s" }}
+        />
+      </div>
+
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#14b8a620_1px,transparent_1px),linear-gradient(to_bottom,#14b8a620_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b-2 border-teal-200 shadow-lg shadow-teal-100/50">
+        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-5">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
-              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-teal-500/30 group-hover:shadow-xl group-hover:shadow-teal-500/40 transition-all group-hover:scale-105">
-                <Home className="w-7 h-7 text-white" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
+                <div className="relative w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-xl shadow-teal-500/30">
+                  <Home className="w-7 h-7 text-white" />
+                </div>
               </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent">
-                RENTLY
-              </span>
+              <div>
+                <span className="text-3xl font-black bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
+                  RENTLY
+                </span>
+                <p className="text-xs text-teal-600 font-medium">
+                  Орон сууцны зах зээл
+                </p>
+              </div>
             </Link>
 
             <Link
               href="/sign-in"
-              className="flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-2xl border-2 border-gray-200 hover:border-teal-400 bg-white hover:bg-teal-50 transition-all font-semibold text-gray-700 hover:text-teal-700 shadow-sm text-sm sm:text-base"
+              className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-teal-50 border-2 border-teal-200 hover:border-teal-400 transition-all font-semibold text-teal-700 hover:text-teal-800 shadow-sm"
             >
               <User className="w-4 h-4" />
-              <span className="hidden sm:inline">Нэвтрэх</span>
-              <span className="sm:hidden">Нэвтрэх</span>
+              <span>Нэвтрэх</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-100 to-blue-100 rounded-full mb-4 sm:mb-6">
-              <Shield className="w-5 h-5 text-teal-600" />
-              <span className="text-sm font-bold text-teal-700">
-                Найдвартай бүртгэл
-              </span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent mb-3 sm:mb-4">
-              Шинэ эхлэл эхлүүлэх
-            </h1>
-            <p className="text-base sm:text-lg text-gray-600 max-w-md mx-auto px-4">
-              Өөрийн account үүсгээд зар үзэх, хадгалах боломжтой болно
-            </p>
+      <main className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-20">
+        <div className="text-center mb-16 space-y-6">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-100 to-emerald-100 rounded-full border-2 border-teal-300/50 shadow-lg shadow-teal-200/50">
+            <Sparkles className="w-5 h-5 text-teal-600 animate-pulse" />
+            <span className="text-sm font-bold text-teal-700">
+              Найдвартай бүртгэл
+            </span>
           </div>
 
-          <Card className="rounded-3xl shadow-2xl border-2 border-gray-200 bg-white overflow-hidden">
-            <div className="p-6 sm:p-8 bg-gradient-to-r from-teal-500 to-teal-600">
-              <div className="flex items-center gap-4 mb-3">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                  <User className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black">
+            <span className="block text-gray-900 mb-2">Шинэ эхлэл</span>
+            <span className="block bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              эхлүүлэх
+            </span>
+          </h1>
+
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
+            Өөрийн account үүсгээд зар үзэх, хадгалах, түрээслэх боломжтой болно
+          </p>
+        </div>
+
+        <Card className="max-w-5xl mx-auto rounded-3xl bg-white/80 backdrop-blur-xl border-2 border-teal-200 shadow-2xl shadow-teal-200/50 overflow-hidden">
+          <div className="relative px-8 lg:px-12 py-10 bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600 border-b-2 border-teal-400">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_50%)]" />
+            <div className="relative flex items-center gap-5">
+              <div className="relative">
+                <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl" />
+                <div className="relative w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/30">
+                  <User className="w-8 h-8 text-white" />
                 </div>
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-white">
-                    Бүртгүүлэх
-                  </h2>
-                  <p className="text-sm sm:text-base text-teal-50">
-                    Таны мэдээллийг оруулна уу
-                  </p>
-                </div>
+              </div>
+              <div>
+                <h2 className="text-3xl font-black text-white mb-1">
+                  Бүртгүүлэх
+                </h2>
+                <p className="text-teal-50 font-medium">
+                  Таны мэдээллийг оруулна уу
+                </p>
               </div>
             </div>
+          </div>
 
-            <form
-              onSubmit={submit}
-              className="p-6 sm:p-8 space-y-5 sm:space-y-6"
-            >
-              <div>
-                <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-teal-500 rounded-full"></span>
+          <form onSubmit={submit} className="px-8 lg:px-12 py-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
                   Хэрэглэгчийн нэр
                 </Label>
-                <div className="relative mt-2">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center">
-                    <User className="w-5 h-5 text-teal-600" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <User className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <Input
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="kenomu"
+                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      autoComplete="username"
+                      required
+                    />
                   </div>
-                  <Input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="kenomu"
-                    className="pl-16 pr-4 h-14 rounded-2xl border-2 border-gray-200 focus:border-teal-500 text-base font-medium"
-                    autoComplete="username"
-                    required
-                  />
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                   Хэрэглэгчийн төрөл
                 </Label>
-                <div className="relative mt-2">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center z-10">
-                    <Shield className="w-5 h-5 text-blue-600" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center z-10">
+                      <Shield className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <Select
+                      value={role}
+                      onValueChange={(v) => setRole(v as Role)}
+                    >
+                      <SelectTrigger className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 hover:border-emerald-500 text-gray-900 text-lg font-medium shadow-sm">
+                        <SelectValue placeholder="Төрөл сонгох" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white border-2 border-gray-200 rounded-2xl shadow-xl">
+                        <SelectItem
+                          value="RENTER"
+                          className="rounded-xl py-4 focus:bg-teal-50"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+                              <User className="w-5 h-5 text-teal-600" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900">
+                                Түрээслэгч
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Орон сууц түрээслэх
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem
+                          value="LANDLORD"
+                          className="rounded-xl py-4 focus:bg-emerald-50"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+                              <Home className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-gray-900">
+                                Түрээслүүлэгч
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                Орон сууц түрээслүүлэх
+                              </p>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select
-                    value={role}
-                    onValueChange={(v) => setRole(v as Role)}
-                  >
-                    <SelectTrigger className="h-16 pl-16 pr-4 rounded-2xl border-2 border-gray-200 hover:border-blue-400 text-base font-medium">
-                      <SelectValue placeholder="Төрөл сонгох" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl ">
-                      <SelectItem value="RENTER" className="rounded-xl py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                            <User className="w-4 h-4 text-teal-600" />
-                          </div>
-                          <div>
-                            <p className="font-bold">Түрээслэгч</p>
-                            <p className="text-xs text-gray-500">
-                              Орон сууц түрээслэх
-                            </p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="LANDLORD" className="rounded-xl py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Home className="w-4 h-4 text-blue-600" />
-                          </div>
-                          <div>
-                            <p className="font-bold">Түрээслүүлэгч</p>
-                            <p className="text-xs text-gray-500">
-                              Орон сууц түрээслүүлэх
-                            </p>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
-                  Нэр{" "}
+              <div className="space-y-3 lg:col-span-2">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full" />
+                  Нэр
                   <span className="text-xs text-gray-500 font-normal">
                     (заавал биш)
                   </span>
                 </Label>
-                <div className="relative mt-2">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
-                    <User className="w-5 h-5 text-purple-600" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-cyan-100 rounded-xl flex items-center justify-center">
+                      <User className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Таны бүтэн нэр"
+                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-cyan-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      autoComplete="name"
+                    />
                   </div>
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Таны бүтэн нэр"
-                    className="pl-16 pr-4 h-14 rounded-2xl border-2 border-gray-200 focus:border-purple-500 text-base font-medium"
-                    autoComplete="name"
-                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                <div>
-                  <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span>
-                    Имэйл{" "}
-                    <span className="text-xs text-gray-500 font-normal">
-                      (заавал биш)
-                    </span>
-                  </Label>
-                  <div className="relative mt-2">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-orange-600" />
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
+                  Имэйл
+                  <span className="text-xs text-gray-500 font-normal">
+                    (заавал биш)
+                  </span>
+                </Label>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <Mail className="w-5 h-5 text-teal-600" />
                     </div>
                     <Input
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@email.com"
-                      className="pl-16 pr-4 h-14 rounded-2xl border-2 border-gray-200 focus:border-orange-500 text-base font-medium"
+                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="email"
                       inputMode="email"
                     />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                    Утас{" "}
-                    <span className="text-xs text-gray-500 font-normal">
-                      (заавал биш)
-                    </span>
-                  </Label>
-                  <div className="relative mt-2">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
-                      <Phone className="w-5 h-5 text-green-600" />
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  Утас
+                  <span className="text-xs text-gray-500 font-normal">
+                    (заавал биш)
+                  </span>
+                </Label>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-emerald-600" />
                     </div>
                     <Input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="99112233"
-                      className="pl-16 pr-4 h-14 rounded-2xl border-2 border-gray-200 focus:border-green-500 text-base font-medium"
+                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-emerald-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="tel"
                       inputMode="numeric"
                     />
@@ -333,60 +386,55 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div>
-                <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
                   Нууц үг
                 </Label>
-                <div className="relative mt-2">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-red-600" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="8+ тэмдэгт"
+                      className="pl-20 pr-16 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-5 w-11 h-11 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="8+ тэмдэгт"
-                    className="pl-16 pr-14 h-14 rounded-2xl border-2 border-gray-200 focus:border-red-500 text-base font-medium"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
 
                 {password.length > 0 && (
-                  <div className="mt-3">
-                    <div className="flex gap-2 mb-2">
+                  <div className="space-y-2 pt-2">
+                    <div className="flex gap-2">
                       <div
-                        className={`h-2 flex-1 rounded-full transition-colors ${
-                          passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"
-                        }`}
+                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"}`}
                       />
                       <div
-                        className={`h-2 flex-1 rounded-full transition-colors ${
-                          passwordStrength >= 2
-                            ? "bg-yellow-500"
-                            : "bg-gray-200"
-                        }`}
+                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 2 ? "bg-yellow-500" : "bg-gray-200"}`}
                       />
                       <div
-                        className={`h-2 flex-1 rounded-full transition-colors ${
-                          passwordStrength >= 3 ? "bg-green-500" : "bg-gray-200"
-                        }`}
+                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 3 ? "bg-emerald-500" : "bg-gray-200"}`}
                       />
                     </div>
-                    <p className="text-xs font-semibold text-gray-600">
+                    <p className="text-xs font-bold text-gray-600">
                       {passwordStrength === 1 && "Сул"}
                       {passwordStrength === 2 && "Дунд"}
                       {passwordStrength === 3 && "Хүчтэй"}
@@ -395,51 +443,54 @@ export default function SignupPage() {
                 )}
               </div>
 
-              <div>
-                <Label className="text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+              <div className="space-y-3">
+                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
                   Нууц үг баталгаажуулах
                 </Label>
-                <div className="relative mt-2">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
-                    <Lock className="w-5 h-5 text-red-600" />
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
+                  <div className="relative flex items-center">
+                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-teal-600" />
+                    </div>
+                    <Input
+                      type={showConfirm ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Нууц үгээ дахин оруулна уу"
+                      className="pl-20 pr-16 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm((v) => !v)}
+                      className="absolute right-5 w-11 h-11 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all"
+                      aria-label="Toggle confirm password visibility"
+                    >
+                      {showConfirm ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
-                  <Input
-                    type={showConfirm ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Нууц үгээ дахин оруулна уу"
-                    className="pl-16 pr-14 h-14 rounded-2xl border-2 border-gray-200 focus:border-red-500 text-base font-medium"
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors"
-                    aria-label="Toggle confirm password visibility"
-                  >
-                    {showConfirm ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
                 </div>
 
                 {confirmPassword.length > 0 && (
-                  <div className="mt-3">
+                  <div className="pt-2">
                     {password === confirmPassword ? (
-                      <div className="flex items-center gap-2 text-green-600">
-                        <CheckCircle2 className="w-4 h-4" />
-                        <span className="text-sm font-semibold">
+                      <div className="flex items-center gap-2 text-emerald-600">
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span className="text-sm font-bold">
                           Нууц үг таарч байна
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-red-600">
-                        <X className="w-4 h-4" />
-                        <span className="text-sm font-semibold">
+                      <div className="flex items-center gap-2 text-red-500">
+                        <X className="w-5 h-5" />
+                        <span className="text-sm font-bold">
                           Нууц үг таарахгүй байна
                         </span>
                       </div>
@@ -447,16 +498,19 @@ export default function SignupPage() {
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="pt-4 space-y-4">
+            <div className="mt-10 space-y-5">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
                 <Button
                   type="submit"
                   disabled={!canSubmit || loading}
-                  className="w-full h-14 rounded-2xl text-base font-bold bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-700 hover:to-teal-600 shadow-lg shadow-teal-500/30 transition-all hover:shadow-xl hover:shadow-teal-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative w-full h-16 rounded-2xl text-lg font-black bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-xl shadow-teal-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <span className="flex items-center gap-3">
+                      <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -475,37 +529,42 @@ export default function SignupPage() {
                       Бүртгэж байна...
                     </span>
                   ) : (
-                    "Бүртгүүлэх"
+                    <span className="flex items-center gap-2">
+                      Бүртгүүлэх
+                      <ArrowRight className="w-5 h-5" />
+                    </span>
                   )}
                 </Button>
-
-                <p className="text-xs text-gray-500 text-center px-4">
-                  Бүртгүүлснээр та манай{" "}
-                  <Link
-                    href="/terms"
-                    className="text-teal-600 hover:text-teal-700 font-semibold underline"
-                  >
-                    үйлчилгээний нөхцөл
-                  </Link>{" "}
-                  болон{" "}
-                  <Link
-                    href="/privacy"
-                    className="text-teal-600 hover:text-teal-700 font-semibold underline"
-                  >
-                    нууцлалын бодлого
-                  </Link>
-                  -ыг зөвшөөрсөнд тооцно
-                </p>
               </div>
-            </form>
-          </Card>
 
-          <div className="text-center mt-6 sm:mt-8 p-4 sm:p-6 bg-white rounded-2xl border-2 border-gray-200 shadow-sm">
-            <p className="text-sm sm:text-base text-gray-700">
+              <p className="text-xs text-gray-600 text-center">
+                Бүртгүүлснээр та манай{" "}
+                <Link
+                  href="/terms"
+                  className="text-teal-600 hover:text-teal-700 font-bold underline"
+                >
+                  үйлчилгээний нөхцөл
+                </Link>{" "}
+                болон{" "}
+                <Link
+                  href="/privacy"
+                  className="text-teal-600 hover:text-teal-700 font-bold underline"
+                >
+                  нууцлалын бодлого
+                </Link>
+                -ыг зөвшөөрсөнд тооцно
+              </p>
+            </div>
+          </form>
+        </Card>
+
+        <div className="text-center mt-10">
+          <div className="inline-block p-6 bg-white/80 backdrop-blur-xl rounded-2xl border-2 border-teal-200 shadow-lg shadow-teal-200/50">
+            <p className="text-gray-700 font-medium">
               Аль хэдийн бүртгэлтэй юу?{" "}
               <Link
                 href="/sign-in"
-                className="font-bold text-teal-600 hover:text-teal-700 transition-colors underline"
+                className="font-black text-teal-600 hover:text-teal-700 transition-all underline"
               >
                 Нэвтрэх
               </Link>
@@ -513,6 +572,18 @@ export default function SignupPage() {
           </div>
         </div>
       </main>
+
+      <style jsx>{`
+        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&display=swap");
+
+        * {
+          font-family:
+            "DM Sans",
+            system-ui,
+            -apple-system,
+            sans-serif;
+        }
+      `}</style>
     </div>
   );
 }
