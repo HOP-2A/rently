@@ -398,7 +398,10 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
             <aside className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
-              <div className="relative h-36 bg-gradient-to-br from-teal-500 via-cyan-500 to-blue-500 overflow-hidden">
+              <div
+                className="relative h-28
+               bg-white"
+              >
                 <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
                 <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
               </div>
@@ -423,7 +426,7 @@ export default function ProfilePage() {
                         {displayName}
                       </h2>
                       <p className="text-sm text-gray-600 font-medium">
-                        @{user?.username ?? clerkUser?.username ?? "—"}
+                        @{user?.username ?? clerkUser?.username ?? "—"} 
                       </p>
                     </div>
                   </div>
@@ -432,7 +435,7 @@ export default function ProfilePage() {
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10 rounded-xl hover:bg-gray-100 mb-2"
-                    onClick={EditProfile}
+                    onClick={EditProfile} 
                   >
                     <Edit3 className="h-4 w-4 text-gray-600" />
                   </Button>
@@ -446,7 +449,7 @@ export default function ProfilePage() {
                   <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-amber-500/20">
                     <span className="h-2 w-2 rounded-full bg-white" />
                     Баталгаажсан
-                  </span>
+                  </span> 
                 </div>
               </div>
 
@@ -480,7 +483,7 @@ export default function ProfilePage() {
 
                 <div className="mt-6 space-y-3">
                   <Link href="/profile/rental-history" className="block">
-                    <Button className="h-12 w-full rounded-xl bg-gradient-to-r from-gray-900 to-gray-700 text-white shadow-lg hover:opacity-90 font-bold text-base transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <Button className="h-12 w-full rounded-xl bg-gradient-to-r bg-gradient-to-r from-teal-500 to-teal-600 shadow-md transition-transform font-bold text-base transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer">
                       <Clock className="w-5 h-5" />
                       Түрээсийн түүх
                     </Button>
@@ -488,7 +491,7 @@ export default function ProfilePage() {
 
                   <Button
                     variant="outline"
-                    className="h-12 w-full rounded-xl border-2 border-gray-200 font-bold text-base hover:bg-gray-50 transition-all duration-300"
+                    className="h-12 w-full rounded-xl border-2 border-gray-200 font-bold text-base hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     onClick={logout}
                   >
                     Гарах
@@ -531,7 +534,7 @@ export default function ProfilePage() {
                   />
                   <button
                     onClick={() => setActive("all")}
-                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg ${
+                    className={` cursor-pointer relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg  ${
                       active === "all"
                         ? "text-white"
                         : "text-gray-600 hover:text-gray-900"
@@ -541,7 +544,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setActive("buy")}
-                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg ${
+                    className={`cursor-pointer relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg ${
                       active === "buy"
                         ? "text-white"
                         : "text-gray-600 hover:text-gray-900"
@@ -551,7 +554,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setActive("rent")}
-                    className={`relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg ${
+                    className={`cursor-pointer relative z-10 flex-1 px-6 py-3 text-sm font-bold transition-colors rounded-lg ${
                       active === "rent"
                         ? "text-white"
                         : "text-gray-600 hover:text-gray-900"
@@ -642,7 +645,7 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-8">
             <aside className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
-              <div className="relative h-36 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 overflow-hidden">
+              <div className="relative h-23 bg-gradient-to-br bg-white overflow-hidden">
                 <div className="absolute -top-24 -right-24 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
                 <div className="absolute -top-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
               </div>
@@ -675,14 +678,14 @@ export default function ProfilePage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-10 w-10 rounded-xl hover:bg-gray-100 mb-2"
-                    onClick={EditProfile}
+                    className="h-10 w-10 rounded-xl hover:bg-gray-100 mb-2 "
+                    onClick={EditProfile} 
                   >
                     <Edit3 className="h-4 w-4 text-gray-600" />
                   </Button>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 mt-4">
+             <div className="flex flex-wrap items-center gap-2 mt-4">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/20">
                     <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
                     ТҮРЭЭСЛҮҮЛЭГЧ
@@ -724,7 +727,7 @@ export default function ProfilePage() {
 
                 <div className="mt-6 space-y-3">
                   <Link href="/LandLord/createListing" className="block">
-                    <Button className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:opacity-90 font-bold text-base transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <Button className="h-12 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:opacity-90 font-bold text-base transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer">
                       <Plus className="w-5 h-5" />
                       Шинэ зар нэмэх
                     </Button>
@@ -732,7 +735,7 @@ export default function ProfilePage() {
 
                   <Button
                     variant="outline"
-                    className="h-12 w-full rounded-xl border-2 border-gray-200 font-bold text-base hover:bg-gray-50 transition-all duration-300"
+                    className="h-12 w-full rounded-xl border-2 border-gray-200 font-bold text-base hover:bg-gray-50 transition-all duration-300 cursor-pointer"
                     onClick={logout}
                   >
                     Гарах
