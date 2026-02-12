@@ -1,4 +1,5 @@
-import { CreateListingForm } from "@/app/_components/create-listing-form";
+"use client";
+import { CreateListingForm } from "@/app/_components/CreateListing";
 
 const Page = () => {
   return (

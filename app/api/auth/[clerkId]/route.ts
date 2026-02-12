@@ -3,11 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { clerkId: string } },
+  { params }: { params: Promise<{ clerkId: string }> }
 ) {
   const { clerkId } = await params;
-
-
 
   if (!clerkId) {
     return NextResponse.json({ error: "Missing clerkId" }, { status: 400 });
@@ -27,6 +25,6 @@ export async function GET(
       createdAt: user.createdAt.toISOString(),
       updatedAt: user.updatedAt.toISOString(),
     },
-    { status: 200 },
+    { status: 200 }
   );
 }

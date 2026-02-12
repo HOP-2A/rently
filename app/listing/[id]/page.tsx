@@ -118,7 +118,7 @@ function maskPhone(phone: string): string {
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
-// ✅ Leaflet default icon fix (Next дээр marker алга болдог асуудал)
+
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -255,7 +255,7 @@ export default function Page() {
   }, [id, user?.id]);
 
   const handleRevealPhone = () => {
-    if (!user?.id) return; // ✅ login шаардлагатай
+    if (!user?.id) return;
     if (!agreedToPrivacy) setShowPrivacyModal(true);
     else setShowPhone(true);
   };
@@ -359,7 +359,6 @@ export default function Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ✅ Leaflet z-index-ийг дарж modal дээр гаргахгүй болгоно */}
       <style jsx global>{`
         .leaflet-container {
           z-index: 0 !important;

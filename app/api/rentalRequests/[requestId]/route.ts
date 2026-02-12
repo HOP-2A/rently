@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 
 export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } },
+  req: NextRequest,
+  { params }: { params: Promise<{ requestId: string }> },
 ) {
-  const { id } = params;
+  const { requestId } = await params;
   const { status } = await req.json();
 
   if (!["APPROVED", "REJECTED"].includes(status)) {
@@ -14,7 +14,7 @@ export async function PATCH(
 
   try {
     const request = await prisma.rentalRequest.findUnique({
-      where: { id },
+      where: { id: requestId },
       include: { listing: true },
     });
 
@@ -31,7 +31,7 @@ export async function PATCH(
 
     await prisma.$transaction(async (tx) => {
       await tx.rentalRequest.update({
-        where: { id },
+        where: { id: requestId },
         data: { status },
       });
 
@@ -66,7 +66,7 @@ export async function PATCH(
       }
     });
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

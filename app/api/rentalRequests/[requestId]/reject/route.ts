@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
 
 export async function POST(
-  req: Request,
-  context: { params: { requestId: string } },
+  req: NextRequest,
+  { params }: { params: Promise<{ requestId: string }> },
 ) {
   try {
     const { userId } = await auth();
@@ -20,7 +20,7 @@ export async function POST(
     if (me.role !== "LANDLORD")
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    const { requestId } = await context.params;
+    const { requestId } = await params;
     if (!requestId)
       return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
 
