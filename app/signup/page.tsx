@@ -572,18 +572,6 @@ export default function SignupPage() {
           </div>
         </div>
       </main>
-
-      <style jsx>{`
-        @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&display=swap");
-
-        * {
-          font-family:
-            "DM Sans",
-            system-ui,
-            -apple-system,
-            sans-serif;
-        }
-      `}</style>
     </div>
   );
 }
