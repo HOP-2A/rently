@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { RentalRequestStatus } from "@prisma/client";
+
+const ALLOWED = new Set<RentalRequestStatus>([
+  RentalRequestStatus.APPROVED,
+  RentalRequestStatus.REJECTED,
+]);
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ requestId: string }> },
 ) {
   const { requestId } = await params;
-  const { status } = await req.json();
 
-  if (!["APPROVED", "REJECTED"].includes(status)) {
+  const body: unknown = await req.json();
+  const raw = (body as { status?: unknown }).status;
+
+  if (typeof raw !== "string") {
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  const status = raw.toUpperCase() as RentalRequestStatus;
+  if (!ALLOWED.has(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
@@ -22,49 +35,43 @@ export async function PATCH(
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }
 
-    if (request.status !== "PENDING") {
+    if (request.status !== RentalRequestStatus.PENDING) {
       return NextResponse.json(
         { error: "Request already handled" },
         { status: 400 },
       );
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.rentalRequest.update({
-        where: { id: requestId },
-        data: { status },
-      });
-
-      if (status === "APPROVED") {
-        await tx.rent.updateMany({
-          where: {
-            listingId: request.listingId,
-            status: "ACTIVE",
-          },
-          data: {
-            status: "ENDED",
-            endAt: new Date(),
-          },
-        });
-
-        const rent = await tx.rent.create({
+    if (status === RentalRequestStatus.APPROVED) {
+      const [, , rent] = await prisma.$transaction([
+        prisma.rentalRequest.update({
+          where: { id: requestId },
+          data: { status },
+        }),
+        prisma.rent.updateMany({
+          where: { listingId: request.listingId, status: "ACTIVE" },
+          data: { status: "ENDED", endAt: new Date() },
+        }),
+        prisma.rent.create({
           data: {
             listingId: request.listingId,
             renterId: request.renterId,
             rentalRequestId: request.id,
             status: "ACTIVE",
           },
-        });
+        }),
+      ]);
 
-        await tx.listing.update({
-          where: { id: request.listingId },
-          data: {
-            isActive: false,
-            currentRentId: rent.id,
-          },
-        });
-      }
-    });
+      await prisma.listing.update({
+        where: { id: request.listingId },
+        data: { isActive: false, currentRentId: rent.id },
+      });
+    } else {
+      await prisma.rentalRequest.update({
+        where: { id: requestId },
+        data: { status },
+      });
+    }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (e) {

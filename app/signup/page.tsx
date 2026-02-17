@@ -15,12 +15,10 @@ import {
   Shield,
   X,
   ArrowRight,
-  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Select,
@@ -36,37 +34,35 @@ type SignupPayload = {
   username: string;
   password: string;
   type: Role;
-  name?: string;
-  email?: string;
-  phone?: string;
+  name: string;
+  email: string;
+  phone: string;
 };
 
 export default function SignupPage() {
   const router = useRouter();
 
-  const [username, setUsername] = useState<string>("");
+  const [username, setUsername] = useState("");
   const [role, setRole] = useState<Role | "">("");
-
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
-
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirm, setShowConfirm] = useState<boolean>(false);
-
-  const [loading, setLoading] = useState<boolean>(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const canSubmit = useMemo(() => {
     if (!username.trim()) return false;
     if (!role) return false;
-    if (!password) return false;
-    if (password.length < 8) return false;
+    if (!name.trim()) return false;
+    if (!email.trim()) return false;
+    if (!phone.trim()) return false;
+    if (!password || password.length < 8) return false;
     if (password !== confirmPassword) return false;
     return true;
-  }, [username, role, password, confirmPassword]);
+  }, [username, role, name, email, phone, password, confirmPassword]);
 
   const passwordStrength = useMemo(() => {
     if (password.length === 0) return 0;
@@ -77,45 +73,23 @@ export default function SignupPage() {
 
   const submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!username.trim()) {
-      toast.error("Username оруулна уу");
-      return;
-    }
-    if (!role) {
-      toast.error("Role сонгоно уу");
-      return;
-    }
-    if (!password || password.length < 8) {
-      toast.error("Password 8+ тэмдэгт байх ёстой");
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error("Password таарахгүй байна");
-      return;
-    }
-
+    if (!canSubmit) return;
     setLoading(true);
-
     try {
       const payload: SignupPayload = {
         username: username.trim(),
         password,
-        type: role,
+        type: role as Role,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
       };
-
-      if (name.trim()) payload.name = name.trim();
-      if (email.trim()) payload.email = email.trim();
-      if (phone.trim()) payload.phone = phone.trim();
-
       const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
       const data: unknown = await res.json().catch(() => null);
-
       if (!res.ok) {
         const msg =
           typeof data === "object" && data !== null && "error" in data
@@ -123,7 +97,6 @@ export default function SignupPage() {
             : "Signup failed";
         throw new Error(msg);
       }
-
       toast.success("Амжилттай бүртгэгдлээ!");
       router.push("/sign-in");
     } catch (err) {
@@ -133,175 +106,590 @@ export default function SignupPage() {
     }
   };
 
+  const strengthLabel = ["", "Сул", "Дунд", "Хүчтэй"];
+  const strengthColor = ["", "#ef4444", "#f59e0b", "#10b981"];
+
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-teal-50 via-white to-emerald-50">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-teal-200/40 rounded-full blur-3xl animate-pulse" />
-        <div
-          className="absolute bottom-0 right-1/4 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-cyan-200/30 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        />
-      </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
 
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#14b8a620_1px,transparent_1px),linear-gradient(to_bottom,#14b8a620_1px,transparent_1px)] bg-[size:40px_40px]" />
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/80 border-b-2 border-teal-200 shadow-lg shadow-teal-100/50">
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-12 py-5">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
-                <div className="relative w-14 h-14 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-xl shadow-teal-500/30">
-                  <Home className="w-7 h-7 text-white" />
-                </div>
-              </div>
-              <div>
-                <span className="text-3xl font-black bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent">
-                  RENTLY
-                </span>
-                <p className="text-xs text-teal-600 font-medium">
-                  Орон сууцны зах зээл
-                </p>
-              </div>
-            </Link>
+        .su-root {
+          min-height: 100vh;
+          background: #f8f7f4;
+          font-family: 'DM Sans', sans-serif;
+          color: #1a1a1a;
+          display: flex;
+          flex-direction: column;
+        }
 
-            <Link
-              href="/sign-in"
-              className="group flex items-center gap-2 px-6 py-3 rounded-xl bg-white hover:bg-teal-50 border-2 border-teal-200 hover:border-teal-400 transition-all font-semibold text-teal-700 hover:text-teal-800 shadow-sm"
-            >
-              <User className="w-4 h-4" />
-              <span>Нэвтрэх</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-        </div>
-      </header>
+        /* ── Header ── */
+        .su-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 48px;
+          height: 68px;
+          background: #f8f7f4;
+          border-bottom: 1px solid #e4e0d8;
+          position: sticky;
+          top: 0;
+          z-index: 40;
+        }
 
-      <main className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 py-12 lg:py-20">
-        <div className="text-center mb-16 space-y-6">
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-100 to-emerald-100 rounded-full border-2 border-teal-300/50 shadow-lg shadow-teal-200/50">
-            <Sparkles className="w-5 h-5 text-teal-600 animate-pulse" />
-            <span className="text-sm font-bold text-teal-700">
-              Найдвартай бүртгэл
-            </span>
-          </div>
+        .su-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+        }
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black">
-            <span className="block text-gray-900 mb-2">Шинэ эхлэл</span>
-            <span className="block bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              эхлүүлэх
-            </span>
-          </h1>
+        .su-logo-icon {
+          width: 36px;
+          height: 36px;
+          background: #1a1a1a;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
 
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto font-medium">
-            Өөрийн account үүсгээд зар үзэх, хадгалах, түрээслэх боломжтой болно
-          </p>
-        </div>
+        .su-logo-icon svg {
+          width: 18px;
+          height: 18px;
+          stroke: #f8f7f4;
+        }
 
-        <Card className="max-w-5xl mx-auto rounded-3xl bg-white/80 backdrop-blur-xl border-2 border-teal-200 shadow-2xl shadow-teal-200/50 overflow-hidden">
-          <div className="relative px-8 lg:px-12 py-10 bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600 border-b-2 border-teal-400">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.15),transparent_50%)]" />
-            <div className="relative flex items-center gap-5">
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/30 rounded-2xl blur-xl" />
-                <div className="relative w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border-2 border-white/30">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-              </div>
-              <div>
-                <h2 className="text-3xl font-black text-white mb-1">
-                  Бүртгүүлэх
-                </h2>
-                <p className="text-teal-50 font-medium">
-                  Таны мэдээллийг оруулна уу
-                </p>
-              </div>
+        .su-logo-text {
+          font-family: 'DM Serif Display', serif;
+          font-size: 22px;
+          color: #1a1a1a;
+          letter-spacing: -0.02em;
+        }
+
+        .su-header-link {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #555;
+          text-decoration: none;
+          padding: 8px 16px;
+          border: 1px solid #d6d1c8;
+          border-radius: 8px;
+          background: transparent;
+          transition: all 0.15s ease;
+        }
+
+        .su-header-link:hover {
+          background: #1a1a1a;
+          color: #f8f7f4;
+          border-color: #1a1a1a;
+        }
+
+        /* ── Main layout ── */
+        .su-main {
+          flex: 1;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          min-height: calc(100vh - 68px);
+        }
+
+        /* ── Left panel ── */
+        .su-left {
+          background: #1a1a1a;
+          padding: 64px 56px;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .su-left::before {
+          content: '';
+          position: absolute;
+          top: -120px;
+          right: -120px;
+          width: 360px;
+          height: 360px;
+          background: radial-gradient(circle, #2d6a4f22 0%, transparent 70%);
+          border-radius: 50%;
+        }
+
+        .su-left-top {
+          position: relative;
+          z-index: 1;
+        }
+
+        .su-left-eyebrow {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #6b9e7e;
+          margin-bottom: 28px;
+        }
+
+        .su-left-heading {
+          font-family: 'DM Serif Display', serif;
+          font-size: 52px;
+          line-height: 1.08;
+          color: #f8f7f4;
+          letter-spacing: -0.02em;
+          margin-bottom: 24px;
+        }
+
+        .su-left-heading em {
+          font-style: italic;
+          color: #7ec8a0;
+        }
+
+        .su-left-desc {
+          font-size: 15px;
+          color: #9a9486;
+          line-height: 1.65;
+          max-width: 320px;
+        }
+
+        .su-left-bottom {
+          position: relative;
+          z-index: 1;
+        }
+
+        .su-features {
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .su-feature {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          font-size: 14px;
+          color: #9a9486;
+        }
+
+        .su-feature-dot {
+          width: 6px;
+          height: 6px;
+          background: #7ec8a0;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+
+        /* ── Right panel ── */
+        .su-right {
+          background: #f8f7f4;
+          padding: 56px 64px;
+          overflow-y: auto;
+        }
+
+        .su-right-title {
+          font-family: 'DM Serif Display', serif;
+          font-size: 32px;
+          color: #1a1a1a;
+          letter-spacing: -0.02em;
+          margin-bottom: 6px;
+        }
+
+        .su-right-sub {
+          font-size: 14px;
+          color: #888;
+          margin-bottom: 40px;
+        }
+
+        /* ── Form grid ── */
+        .su-form {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+
+        .su-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+
+        .su-row.full {
+          grid-template-columns: 1fr;
+        }
+
+        /* ── Field ── */
+        .su-field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .su-label {
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: #555;
+        }
+
+        .su-input-wrap {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .su-input-icon {
+          position: absolute;
+          left: 14px;
+          color: #aaa;
+          display: flex;
+          align-items: center;
+          pointer-events: none;
+          z-index: 1;
+        }
+
+        .su-input-icon svg {
+          width: 16px;
+          height: 16px;
+          stroke: currentColor;
+        }
+
+        .su-input {
+          width: 100%;
+          height: 48px;
+          padding: 0 14px 0 42px;
+          background: #fff;
+          border: 1px solid #ddd8d0;
+          border-radius: 10px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          font-weight: 400;
+          color: #1a1a1a;
+          transition: border-color 0.15s, box-shadow 0.15s;
+          outline: none;
+          appearance: none;
+          -webkit-appearance: none;
+        }
+
+        .su-input::placeholder {
+          color: #bbb;
+        }
+
+        .su-input:focus {
+          border-color: #1a1a1a;
+          box-shadow: 0 0 0 3px rgba(26,26,26,0.07);
+        }
+
+        .su-input.error {
+          border-color: #ef4444;
+        }
+
+        .su-eye-btn {
+          position: absolute;
+          right: 12px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #aaa;
+          display: flex;
+          align-items: center;
+          padding: 4px;
+          border-radius: 6px;
+          transition: color 0.15s;
+        }
+
+        .su-eye-btn:hover { color: #555; }
+        .su-eye-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+        /* ── Select override ── */
+        .su-select-trigger {
+          width: 100%;
+          height: 48px;
+          padding: 0 14px 0 42px;
+          background: #fff;
+          border: 1px solid #ddd8d0 !important;
+          border-radius: 10px !important;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          color: #1a1a1a;
+          box-shadow: none !important;
+          outline: none !important;
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .su-select-trigger:focus, .su-select-trigger[data-state="open"] {
+          border-color: #1a1a1a !important;
+          box-shadow: 0 0 0 3px rgba(26,26,26,0.07) !important;
+        }
+
+        .su-select-content {
+          background: #fff;
+          border: 1px solid #ddd8d0;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+          overflow: hidden;
+        }
+
+        .su-select-item {
+          padding: 12px 16px;
+          font-size: 14px;
+          cursor: pointer;
+          transition: background 0.1s;
+          border-radius: 8px;
+          margin: 4px;
+        }
+
+        .su-select-item:hover { background: #f2ede6; }
+
+        /* ── Password strength ── */
+        .su-strength {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 8px;
+        }
+
+        .su-strength-bars {
+          display: flex;
+          gap: 4px;
+        }
+
+        .su-strength-bar {
+          height: 3px;
+          flex: 1;
+          border-radius: 2px;
+          background: #e4e0d8;
+          transition: background 0.2s;
+        }
+
+        .su-strength-label {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+        }
+
+        /* ── Password match ── */
+        .su-match {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-top: 8px;
+          font-size: 12px;
+          font-weight: 500;
+        }
+        .su-match svg { width: 14px; height: 14px; stroke: currentColor; fill: none; }
+
+        /* ── Divider ── */
+        .su-divider {
+          height: 1px;
+          background: #e4e0d8;
+          margin: 28px 0;
+        }
+
+        /* ── Submit ── */
+        .su-submit {
+          width: 100%;
+          height: 52px;
+          background: #1a1a1a;
+          color: #f8f7f4;
+          border: none;
+          border-radius: 12px;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          letter-spacing: 0.01em;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.15s, transform 0.1s;
+        }
+
+        .su-submit:hover:not(:disabled) {
+          background: #333;
+        }
+
+        .su-submit:active:not(:disabled) {
+          transform: scale(0.99);
+        }
+
+        .su-submit:disabled {
+          background: #ccc;
+          color: #999;
+          cursor: not-allowed;
+        }
+
+        .su-submit svg {
+          width: 18px;
+          height: 18px;
+          stroke: currentColor;
+          fill: none;
+          transition: transform 0.15s;
+        }
+
+        .su-submit:hover:not(:disabled) svg {
+          transform: translateX(3px);
+        }
+
+        .su-spin {
+          width: 18px;
+          height: 18px;
+          border: 2px solid rgba(255,255,255,0.3);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: su-spin 0.7s linear infinite;
+        }
+
+        @keyframes su-spin { to { transform: rotate(360deg); } }
+
+        /* ── Footer note ── */
+        .su-footer-note {
+          font-size: 12px;
+          color: #aaa;
+          text-align: center;
+          margin-top: 16px;
+          line-height: 1.6;
+        }
+
+        .su-footer-note a {
+          color: #555;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        .su-footer-note a:hover { color: #1a1a1a; }
+
+        /* ── Already registered ── */
+        .su-already {
+          margin-top: 28px;
+          padding-top: 24px;
+          border-top: 1px solid #e4e0d8;
+          font-size: 14px;
+          color: #888;
+          text-align: center;
+        }
+
+        .su-already a {
+          color: #1a1a1a;
+          font-weight: 600;
+          text-decoration: none;
+          border-bottom: 1px solid #1a1a1a;
+          padding-bottom: 1px;
+        }
+
+        .su-already a:hover { opacity: 0.6; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+          .su-main {
+            grid-template-columns: 1fr;
+          }
+          .su-left {
+            padding: 48px 32px;
+            min-height: auto;
+          }
+          .su-left-heading { font-size: 38px; }
+          .su-right { padding: 40px 24px; }
+          .su-header { padding: 0 24px; }
+          .su-row { grid-template-columns: 1fr; }
+        }
+      `}</style>
+
+      <div className="su-root">
+        <header className="su-header">
+          <Link href="/" className="su-logo">
+            <div className="su-logo-icon">
+              <Home />
+            </div>
+            <span className="su-logo-text">Rently</span>
+          </Link>
+          <Link href="/sign-in" className="su-header-link">
+            <User style={{ width: 14, height: 14 }} />
+            Нэвтрэх
+          </Link>
+        </header>
+
+        <main className="su-main">
+          <div className="su-left">
+            <div className="su-left-top">
+              <p className="su-left-eyebrow">Rently — Орон сууцны зах зээл</p>
+              <h1 className="su-left-heading">
+                Шинэ эхлэл
+                <br />
+                <em>эхлүүлэх</em>
+              </h1>
+              <p className="su-left-desc">
+                Account үүсгэж орон сууцны зар үзэх, хадгалах болон түрээслэх
+                боломжтой болно.
+              </p>
+            </div>
+
+            <div className="su-left-bottom">
+              <ul className="su-features">
+                <li className="su-feature">
+                  <span className="su-feature-dot" />
+                  Баталгаажсан зарууд
+                </li>
+                <li className="su-feature">
+                  <span className="su-feature-dot" />
+                  Шууд харилцах боломж
+                </li>
+                <li className="su-feature">
+                  <span className="su-feature-dot" />
+                  Аюулгүй гүйлгээ
+                </li>
+              </ul>
             </div>
           </div>
 
-          <form onSubmit={submit} className="px-8 lg:px-12 py-10">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                  Хэрэглэгчийн нэр
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
-                      <User className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <Input
+          <div className="su-right">
+            <h2 className="su-right-title">Бүртгүүлэх</h2>
+            <p className="su-right-sub">Бүх талбарыг бөглөнө үү</p>
+
+            <form className="su-form" onSubmit={submit} noValidate>
+              <div className="su-row">
+                <div className="su-field">
+                  <label className="su-label">Хэрэглэгчийн нэр</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <User />
+                    </span>
+                    <input
+                      className="su-input"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="kenomu"
-                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="username"
                       required
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                  Хэрэглэгчийн төрөл
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center z-10">
-                      <Shield className="w-5 h-5 text-emerald-600" />
-                    </div>
+                <div className="su-field">
+                  <label className="su-label">Хэрэглэгчийн төрөл</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <Shield />
+                    </span>
                     <Select
                       value={role}
                       onValueChange={(v) => setRole(v as Role)}
                     >
-                      <SelectTrigger className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 hover:border-emerald-500 text-gray-900 text-lg font-medium shadow-sm">
-                        <SelectValue placeholder="Төрөл сонгох" />
+                      <SelectTrigger className="su-select-trigger">
+                        <SelectValue placeholder="Сонгох" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-2 border-gray-200 rounded-2xl shadow-xl">
-                        <SelectItem
-                          value="RENTER"
-                          className="rounded-xl py-4 focus:bg-teal-50"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
-                              <User className="w-5 h-5 text-teal-600" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900">
-                                Түрээслэгч
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Орон сууц түрээслэх
-                              </p>
-                            </div>
-                          </div>
+                      <SelectContent className="su-select-content">
+                        <SelectItem value="RENTER" className="su-select-item">
+                          Түрээслэгч
                         </SelectItem>
-                        <SelectItem
-                          value="LANDLORD"
-                          className="rounded-xl py-4 focus:bg-emerald-50"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                              <Home className="w-5 h-5 text-emerald-600" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-900">
-                                Түрээслүүлэгч
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                Орон сууц түрээслүүлэх
-                              </p>
-                            </div>
-                          </div>
+                        <SelectItem value="LANDLORD" className="su-select-item">
+                          Түрээслүүлэгч
                         </SelectItem>
                       </SelectContent>
                     </Select>
@@ -309,269 +697,195 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-3 lg:col-span-2">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-cyan-500 rounded-full" />
-                  Нэр
-                  <span className="text-xs text-gray-500 font-normal">
-                    (заавал биш)
-                  </span>
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-cyan-100 rounded-xl flex items-center justify-center">
-                      <User className="w-5 h-5 text-cyan-600" />
-                    </div>
-                    <Input
+              <div className="su-row full">
+                <div className="su-field">
+                  <label className="su-label">Бүтэн нэр</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <User />
+                    </span>
+                    <input
+                      className="su-input"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Таны бүтэн нэр"
-                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-cyan-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      placeholder="Болд Баатар"
                       autoComplete="name"
+                      required
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                  Имэйл
-                  <span className="text-xs text-gray-500 font-normal">
-                    (заавал биш)
-                  </span>
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-cyan-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <Input
+              <div className="su-row">
+                <div className="su-field">
+                  <label className="su-label">Имэйл</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <Mail />
+                    </span>
+                    <input
+                      className="su-input"
+                      type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="name@email.com"
-                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="email"
                       inputMode="email"
+                      required
                     />
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                  Утас
-                  <span className="text-xs text-gray-500 font-normal">
-                    (заавал биш)
-                  </span>
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-400/20 to-teal-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-emerald-100 rounded-xl flex items-center justify-center">
-                      <Phone className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <Input
+                <div className="su-field">
+                  <label className="su-label">Утасны дугаар</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <Phone />
+                    </span>
+                    <input
+                      className="su-input"
+                      type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="99112233"
-                      className="pl-20 pr-6 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-emerald-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="tel"
                       inputMode="numeric"
+                      required
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                  Нууц үг
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <Input
+              <div className="su-row">
+                <div className="su-field">
+                  <label className="su-label">Нууц үг</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <Lock />
+                    </span>
+                    <input
+                      className="su-input"
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="8+ тэмдэгт"
-                      className="pl-20 pr-16 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
                       autoComplete="new-password"
                       required
+                      style={{ paddingRight: 44 }}
                     />
                     <button
                       type="button"
+                      className="su-eye-btn"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-5 w-11 h-11 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all"
                       aria-label="Toggle password visibility"
                     >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      {showPassword ? <EyeOff /> : <Eye />}
                     </button>
                   </div>
+                  {password.length > 0 && (
+                    <div className="su-strength">
+                      <div className="su-strength-bars">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="su-strength-bar"
+                            style={{
+                              background:
+                                passwordStrength >= i
+                                  ? strengthColor[passwordStrength]
+                                  : undefined,
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span
+                        className="su-strength-label"
+                        style={{ color: strengthColor[passwordStrength] }}
+                      >
+                        {strengthLabel[passwordStrength]}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                {password.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <div className="flex gap-2">
-                      <div
-                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 1 ? "bg-red-500" : "bg-gray-200"}`}
-                      />
-                      <div
-                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 2 ? "bg-yellow-500" : "bg-gray-200"}`}
-                      />
-                      <div
-                        className={`h-1.5 flex-1 rounded-full transition-all ${passwordStrength >= 3 ? "bg-emerald-500" : "bg-gray-200"}`}
-                      />
-                    </div>
-                    <p className="text-xs font-bold text-gray-600">
-                      {passwordStrength === 1 && "Сул"}
-                      {passwordStrength === 2 && "Дунд"}
-                      {passwordStrength === 3 && "Хүчтэй"}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                <Label className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 bg-teal-500 rounded-full" />
-                  Нууц үг баталгаажуулах
-                </Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-teal-400/20 to-emerald-400/20 rounded-2xl blur-md opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                  <div className="relative flex items-center">
-                    <div className="absolute left-5 w-11 h-11 bg-teal-100 rounded-xl flex items-center justify-center">
-                      <Lock className="w-5 h-5 text-teal-600" />
-                    </div>
-                    <Input
+                <div className="su-field">
+                  <label className="su-label">Нууц үг баталгаажуулах</label>
+                  <div className="su-input-wrap">
+                    <span className="su-input-icon">
+                      <Lock />
+                    </span>
+                    <input
+                      className="su-input"
                       type={showConfirm ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Нууц үгээ дахин оруулна уу"
-                      className="pl-20 pr-16 h-16 rounded-2xl bg-white border-2 border-gray-200 focus:border-teal-500 text-gray-900 text-lg font-medium placeholder:text-gray-400 transition-all shadow-sm"
+                      placeholder="Дахин оруулна уу"
                       autoComplete="new-password"
                       required
+                      style={{ paddingRight: 44 }}
                     />
                     <button
                       type="button"
+                      className="su-eye-btn"
                       onClick={() => setShowConfirm((v) => !v)}
-                      className="absolute right-5 w-11 h-11 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center text-gray-600 hover:text-gray-900 transition-all"
                       aria-label="Toggle confirm password visibility"
                     >
-                      {showConfirm ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      {showConfirm ? <EyeOff /> : <Eye />}
                     </button>
                   </div>
-                </div>
-
-                {confirmPassword.length > 0 && (
-                  <div className="pt-2">
-                    {password === confirmPassword ? (
-                      <div className="flex items-center gap-2 text-emerald-600">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span className="text-sm font-bold">
-                          Нууц үг таарч байна
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 text-red-500">
-                        <X className="w-5 h-5" />
-                        <span className="text-sm font-bold">
-                          Нууц үг таарахгүй байна
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-10 space-y-5">
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity" />
-                <Button
-                  type="submit"
-                  disabled={!canSubmit || loading}
-                  className="relative w-full h-16 rounded-2xl text-lg font-black bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-xl shadow-teal-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <span className="flex items-center gap-3">
-                      <svg className="animate-spin h-6 w-6" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                          fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        />
-                      </svg>
-                      Бүртгэж байна...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      Бүртгүүлэх
-                      <ArrowRight className="w-5 h-5" />
-                    </span>
+                  {confirmPassword.length > 0 && (
+                    <div
+                      className="su-match"
+                      style={{
+                        color:
+                          password === confirmPassword ? "#10b981" : "#ef4444",
+                      }}
+                    >
+                      {password === confirmPassword ? (
+                        <>
+                          <CheckCircle2 /> Нууц үг таарч байна
+                        </>
+                      ) : (
+                        <>
+                          <X /> Нууц үг таарахгүй байна
+                        </>
+                      )}
+                    </div>
                   )}
-                </Button>
+                </div>
               </div>
 
-              <p className="text-xs text-gray-600 text-center">
-                Бүртгүүлснээр та манай{" "}
-                <Link
-                  href="/terms"
-                  className="text-teal-600 hover:text-teal-700 font-bold underline"
-                >
-                  үйлчилгээний нөхцөл
-                </Link>{" "}
-                болон{" "}
-                <Link
-                  href="/privacy"
-                  className="text-teal-600 hover:text-teal-700 font-bold underline"
-                >
-                  нууцлалын бодлого
-                </Link>
-                -ыг зөвшөөрсөнд тооцно
-              </p>
-            </div>
-          </form>
-        </Card>
+              <div className="su-divider" />
 
-        <div className="text-center mt-10">
-          <div className="inline-block p-6 bg-white/80 backdrop-blur-xl rounded-2xl border-2 border-teal-200 shadow-lg shadow-teal-200/50">
-            <p className="text-gray-700 font-medium">
-              Аль хэдийн бүртгэлтэй юу?{" "}
-              <Link
-                href="/sign-in"
-                className="font-black text-teal-600 hover:text-teal-700 transition-all underline"
+              <button
+                type="submit"
+                className="su-submit"
+                disabled={!canSubmit || loading}
               >
-                Нэвтрэх
-              </Link>
-            </p>
+                {loading ? (
+                  <span className="su-spin" />
+                ) : (
+                  <>
+                    Бүртгүүлэх
+                    <ArrowRight />
+                  </>
+                )}
+              </button>
+
+              <p className="su-footer-note">
+                Бүртгүүлснээр та манай{" "}
+                <Link href="/terms">үйлчилгээний нөхцөл</Link> болон{" "}
+                <Link href="/privacy">нууцлалын бодлого</Link>-ыг зөвшөөрсөнд
+                тооцно
+              </p>
+            </form>
+
+            <div className="su-already">
+              Аль хэдийн бүртгэлтэй юу? <Link href="/sign-in">Нэвтрэх</Link>
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

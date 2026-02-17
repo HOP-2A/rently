@@ -4,6 +4,13 @@ import { auth } from "@clerk/nextjs/server";
 
 type Ctx = { params: Promise<{ requestId: string }> };
 
+// prisma.$transaction callback дээр ирдэг tx-ийн type-ийг Prisma importгүйгээр infer хийж авна
+type TxClient = Parameters<(typeof prisma)["$transaction"]>[0] extends (
+  tx: infer T,
+) => any
+  ? T
+  : never;
+
 export async function POST(_req: Request, context: Ctx) {
   try {
     const { userId } = await auth();
@@ -15,6 +22,7 @@ export async function POST(_req: Request, context: Ctx) {
       where: { clerkId: userId },
       select: { id: true, role: true },
     });
+
     if (!me)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (me.role !== "LANDLORD")
@@ -43,7 +51,7 @@ export async function POST(_req: Request, context: Ctx) {
       );
     }
 
-    const out = await prisma.$transaction(async (tx) => {
+    const out = await prisma.$transaction(async (tx: TxClient) => {
       await tx.rentalRequest.update({
         where: { id: requestId },
         data: { status: "APPROVED", decidedAt: new Date() },
@@ -92,7 +100,10 @@ export async function POST(_req: Request, context: Ctx) {
       return { rentId };
     });
 
-    return NextResponse.json({ ok: true, requestId, rentId: out.rentId });
+    return NextResponse.json(
+      { ok: true, requestId, rentId: out.rentId },
+      { status: 200 },
+    );
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Approve failed" }, { status: 500 });
