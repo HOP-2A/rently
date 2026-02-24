@@ -426,7 +426,7 @@ export default function ProfilePage() {
                         {displayName}
                       </h2>
                       <p className="text-sm text-gray-600 font-medium">
-                        @{user?.username ?? clerkUser?.username ?? "—"} 
+                        @{user?.username ?? clerkUser?.username ?? "—"}
                       </p>
                     </div>
                   </div>
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10 rounded-xl hover:bg-gray-100 mb-2"
-                    onClick={EditProfile} 
+                    onClick={EditProfile}
                   >
                     <Edit3 className="h-4 w-4 text-gray-600" />
                   </Button>
@@ -449,7 +449,7 @@ export default function ProfilePage() {
                   <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-amber-500/20">
                     <span className="h-2 w-2 rounded-full bg-white" />
                     Баталгаажсан
-                  </span> 
+                  </span>
                 </div>
               </div>
 
@@ -679,13 +679,13 @@ export default function ProfilePage() {
                     variant="ghost"
                     size="icon"
                     className="h-10 w-10 rounded-xl hover:bg-gray-100 mb-2 "
-                    onClick={EditProfile} 
+                    onClick={EditProfile}
                   >
                     <Edit3 className="h-4 w-4 text-gray-600" />
                   </Button>
                 </div>
 
-             <div className="flex flex-wrap items-center gap-2 mt-4">
+                <div className="flex flex-wrap items-center gap-2 mt-4">
                   <span className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/20">
                     <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
                     ТҮРЭЭСЛҮҮЛЭГЧ
@@ -759,14 +759,6 @@ export default function ProfilePage() {
                     </p>
                   </div>
                 </div>
-
-                <Link
-                  href="/LandLord/createListing"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 hover:scale-105"
-                >
-                  <Plus className="w-5 h-5" />
-                  Шинэ зар
-                </Link>
               </div>
 
               <div className="p-6 border-b border-gray-200 bg-gray-50 flex flex-col md:flex-row md:items-center md:justify-between gap-4">

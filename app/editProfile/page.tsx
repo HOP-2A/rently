@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Upload, X, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -11,29 +11,54 @@ export default function Page() {
   const [phone, setPhone] = useState("");
   const [about, setAbout] = useState("");
   const [avatar, setAvatar] = useState("");
-  const router = useRouter();
+
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const resetForm = () => {
-    setUsername("");
-    setName("");
-    setPhone("");
-    setAbout("");
-    setAvatar("");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const res = await fetch("/api/getProfile", {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          toast.error(data.error || "Profile татахад алдаа гарлаа");
+          return;
+        }
+
+        setUsername(data.username ?? "");
+        setName(data.name ?? "");
+        setPhone(data.phone ?? "");
+        setAbout(data.about ?? "");
+        setAvatar(data.avatar ?? "");
+      } catch (err) {
+        toast.error("Profile татахад алдаа гарлаа");
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    }
+
+    fetchProfile();
+  }, []);
 
   const onlyDigits = (s: string) => s.replace(/\D/g, "");
-  const back = () => {
-    router.push("/profile");
-  };
+
   const validatePhone8 = (raw: string) => {
     const digits = onlyDigits(raw);
     if (digits.length === 0) return { ok: true, digits: "" };
     if (digits.length !== 8) return { ok: false, digits };
     return { ok: true, digits };
+  };
+
+  const back = () => {
+    router.push("/profile");
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,7 +91,6 @@ export default function Page() {
       setAvatar(data.url);
       toast.success("Avatar амжилттай хуулагдлаа");
     } catch (err) {
-      console.error(err);
       toast.error("Avatar хуулахад алдаа гарлаа");
     } finally {
       setIsUploading(false);
@@ -79,30 +103,16 @@ export default function Page() {
   };
 
   async function onSave() {
-    if (!username.trim()) {
-      toast.error("Username хоосон байж болохгүй");
-      return;
-    }
-    if (!name.trim()) {
-      toast.error("Нэр хоосон байж болохгүй");
-      return;
-    }
-    if (!about.trim()) {
-      toast.error("About хоосон байж болохгүй");
-      return;
-    }
-    if (!avatar) {
-      toast.error("Profile зураг шаардлагатай");
-      return;
-    }
+    if (!username.trim()) return toast.error("Username хоосон байж болохгүй");
+    if (!name.trim()) return toast.error("Нэр хоосон байж болохгүй");
+    if (!about.trim()) return toast.error("About хоосон байж болохгүй");
+    if (!avatar) return toast.error("Profile зураг шаардлагатай");
 
     const v = validatePhone8(phone);
-    if (!v.ok) {
-      toast.error("Утасны дугаар яг 8 оронтой байх ёстой");
-      return;
-    }
+    if (!v.ok) return toast.error("Утасны дугаар яг 8 оронтой байх ёстой");
 
     setIsSaving(true);
+
     try {
       const res = await fetch("/api/editProfile", {
         method: "PATCH",
@@ -124,7 +134,6 @@ export default function Page() {
       }
 
       toast.success("Амжилттай хадгалагдлаа ✅");
-
       router.push("/profile");
     } catch (e) {
       toast.error("Сүлжээний алдаа");
@@ -141,6 +150,7 @@ export default function Page() {
       >
         ← Буцах
       </button>
+
       <div className="mx-auto w-full max-w-md">
         <div className="rounded-3xl border-2 border-gray-100 bg-white shadow-lg shadow-gray-200/50">
           <div className="rounded-t-3xl bg-gradient-to-r from-teal-500 to-teal-600 p-5 text-white">

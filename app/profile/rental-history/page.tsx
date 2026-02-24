@@ -216,10 +216,10 @@ export default function RentalHistoryPage() {
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border ">
               Total: {counts.total}
             </span>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200 cursor-pointer">
               Pending {counts.pending}
             </span>
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
@@ -242,7 +242,7 @@ export default function RentalHistoryPage() {
               key={t}
               onClick={() => setFilter(t)}
               className={[
-                "px-4 py-2 rounded-xl text-sm font-semibold border transition",
+                "px-4 py-2 rounded-xl text-sm font-semibold border transition cursor-pointer",
                 filter === t
                   ? "bg-gray-900 text-white border-gray-900"
                   : "bg-white hover:bg-gray-50",
@@ -270,7 +270,7 @@ export default function RentalHistoryPage() {
               </div>
               <div className="mt-4">
                 <Link href="/" className="inline-block">
-                  <Button>Browse listings</Button>
+                  <Button className=" cursor-pointer">Browse listings</Button>
                 </Link>
               </div>
             </Card>
