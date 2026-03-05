@@ -118,7 +118,6 @@ function maskPhone(phone: string): string {
   return digits.slice(0, middleStart) + "****" + digits.slice(middleStart + 4);
 }
 
-
 const DefaultIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   iconRetinaUrl:
@@ -633,6 +632,14 @@ export default function Page() {
                     Имэйл илгээх
                   </a>
                 </div>
+                {isOwner && (
+                  <button
+                    onClick={() => router.push(`/listing/edit/${listing.id}`)}
+                    className="w-full px-4 py-3 rounded-xl font-semibold border bg-yellow-500 text-white hover:bg-yellow-600 hover:cursor-pointer"
+                  >
+                    Post засах
+                  </button>
+                )}
               </div>
             </div>
           </div>

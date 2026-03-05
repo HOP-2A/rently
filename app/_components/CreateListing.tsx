@@ -33,7 +33,6 @@ import { toast } from "sonner";
 import { useUser } from "@clerk/nextjs";
 import { useAuth } from "@/providers/authProvider";
 
-// ✅ SSR safe dynamic import (Leaflet / window issue-ээс build унахгүй)
 const PickLocationMapOSM = dynamic(() => import("./PickLocationMapOSM"), {
   ssr: false,
   loading: () => (
@@ -83,14 +82,12 @@ export function CreateListingForm() {
 
   const ALL = "All";
 
-  // ✅ Render дотор push хийхгүй! (build/hydration дээр асуудал гаргадаг)
   useEffect(() => {
     if (user?.role === "RENTER") {
       router.push("/");
     }
   }, [user?.role, router]);
 
-  // ✅ location state-г formData.address-тэй sync
   useEffect(() => {
     setLocation(formData.address || "");
   }, [formData.address]);
@@ -212,7 +209,6 @@ export function CreateListingForm() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
           <div className="space-y-6">
-            {/* PHOTO CARD */}
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-teal-100 rounded-xl">
