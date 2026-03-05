@@ -25,7 +25,7 @@ type SidebarItem = {
 const sidebarItems: SidebarItem[] = [
   { id: "home", href: "/", icon: Home },
   { id: "profile", href: "/profile", icon: UserRoundIcon },
-  { id: "bookmark", href: "/bookmarks", icon: Bookmark, hideForLandlord: true },
+  { id: "bookmark", href: "/bookmarks", icon: Bookmark },
   {
     id: "add",
     href: "/LandLord/createListing",
