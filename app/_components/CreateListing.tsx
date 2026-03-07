@@ -209,6 +209,7 @@ export function CreateListingForm() {
 
         <div className="grid gap-8 lg:grid-cols-[1fr_420px]">
           <div className="space-y-6">
+            
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 p-6 rounded-3xl">
               <div className="flex items-center gap-3 mb-6">
                 <div className="p-2 bg-teal-100 rounded-xl">
@@ -526,7 +527,7 @@ export function CreateListingForm() {
             </Card>
           </div>
 
-          {/* RIGHT SIDE */}
+          
           <div className="space-y-6">
             <Card className="bg-white border-2 border-gray-100 shadow-lg shadow-gray-200/50 rounded-3xl overflow-hidden">
               <div className="bg-gradient-to-r from-teal-500 to-teal-600 px-6 py-4 rounded-2xl">
