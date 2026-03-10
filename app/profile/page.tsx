@@ -732,6 +732,15 @@ export default function ProfilePage() {
                       Шинэ зар нэмэх
                     </Button>
                   </Link>
+                  <Link
+                    href="/profile/rental-history-landlord"
+                    className="block"
+                  >
+                    <Button className="h-12 w-full rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg hover:opacity-90 font-bold text-base transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-2 cursor-pointer">
+                      <Clock className="w-5 h-5" />
+                      Түрээсийн хүсэлтүүд
+                    </Button>
+                  </Link>
 
                   <Button
                     variant="outline"
