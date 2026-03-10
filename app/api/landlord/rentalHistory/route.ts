@@ -11,31 +11,18 @@ export async function GET() {
 
     const me = await prisma.user.findUnique({
       where: { clerkId: userId },
-      select: { id: true, role: true },
+      select: { id: true },
     });
 
     if (!me)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
 
-    if (me.role !== "LANDLORD")
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
     const requests = await prisma.rentalRequest.findMany({
-      where: {
-        landlordId: me.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
+      where: { renterId: me.id },
+      orderBy: { createdAt: "desc" },
       include: {
-        renter: {
-          select: {
-            id: true,
-            username: true,
-            name: true,
-          },
-        },
-
+        landlord: { select: { id: true, username: true, name: true } },
+        renter: { select: { id: true, name: true, username: true } },
         listing: {
           select: {
             id: true,
@@ -48,7 +35,6 @@ export async function GET() {
             sizeM2: true,
           },
         },
-
         rent: {
           include: {
             reviews: {
@@ -57,12 +43,7 @@ export async function GET() {
                 rating: true,
                 comment: true,
                 createdAt: true,
-                user: {
-                  select: {
-                    username: true,
-                    name: true,
-                  },
-                },
+                user: { select: { username: true, name: true } },
               },
             },
           },
