@@ -80,7 +80,7 @@ function rentBadge(status: RentStatus) {
   return "bg-blue-100 text-blue-700 border-blue-200";
 }
 
-export default function LandlordRentalHistoryPage() {
+export default function RentalHistoryPage() {
   const { isLoaded } = useUser();
 
   const [loading, setLoading] = useState(true);
@@ -103,19 +103,19 @@ export default function LandlordRentalHistoryPage() {
       const json: unknown = await res.json();
 
       if (!res.ok) {
-        setError("Failed to load history");
+        setError("Түүхийг ачаалах боломжгүй байна");
         return;
       }
 
       if (!isApiResponse(json)) {
-        setError("Invalid server response");
+        setError("Серверээс буусан өгөгдөл буруу байна");
         return;
       }
 
       setRequests(json.requests);
     } catch (e) {
       console.error(e);
-      setError("Network / server error");
+      setError("Сүлжээ эсвэл серверийн алдаа");
     } finally {
       setLoading(false);
     }
@@ -150,17 +150,17 @@ export default function LandlordRentalHistoryPage() {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Rental Requests
+              Түрээсийн хүсэлтийн түүх
             </h1>
 
             <p className="text-sm text-gray-600 mt-1">
-              Миний listing дээр ирсэн түрээсийн хүсэлтүүд
+              Миний явуулсан түрээсийн хүсэлтүүд
             </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border">
-              Total: {counts.total}
+              Нийт: {counts.total}
             </span>
 
             <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
@@ -195,7 +195,15 @@ export default function LandlordRentalHistoryPage() {
                   : "bg-white hover:bg-gray-50",
               ].join(" ")}
             >
-              {t}
+              {t === "ALL"
+                ? "Бүгд"
+                : t === "PENDING"
+                  ? "Хүлээгдэж байгаа"
+                  : t === "APPROVED"
+                    ? "Зөвшөөрсөн"
+                    : t === "REJECTED"
+                      ? "Татгалзсан"
+                      : "Цуцлагдсан"}
             </button>
           ))}
         </div>
@@ -208,13 +216,15 @@ export default function LandlordRentalHistoryPage() {
 
         <div className="mt-5">
           {loading ? (
-            <div className="text-sm text-gray-500">Loading...</div>
+            <div className="text-sm text-gray-500">Ачааллаж байна...</div>
           ) : filtered.length === 0 ? (
             <Card className="p-10 text-center">
-              <div className="text-lg font-bold text-gray-900">No requests</div>
+              <div className="text-lg font-bold text-gray-900">
+                Хүсэлт байхгүй
+              </div>
 
               <div className="text-sm text-gray-600 mt-2">
-                Таны listing дээр одоогоор хүсэлт ирээгүй байна
+                Таны явуулсан хүсэлт одоогоор байхгүй байна
               </div>
             </Card>
           ) : (
@@ -251,22 +261,26 @@ export default function LandlordRentalHistoryPage() {
                             </div>
 
                             <div className="text-xs text-gray-500 mt-1">
-                              Renter: {r.renter.name ?? r.renter.username}
+                              Түрээслэгч: {r.renter.name ?? r.renter.username}
                             </div>
                           </div>
 
                           <div className="flex flex-col items-end gap-2">
                             <span
-                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${reqBadge(r.status)}`}
+                              className={`px-3 py-1 rounded-full text-xs font-semibold border ${reqBadge(
+                                r.status,
+                              )}`}
                             >
                               {String(r.status).toUpperCase()}
                             </span>
 
                             {r.rent?.status ? (
                               <span
-                                className={`px-3 py-1 rounded-full text-xs font-semibold border ${rentBadge(r.rent.status)}`}
+                                className={`px-3 py-1 rounded-full text-xs font-semibold border ${rentBadge(
+                                  r.rent.status,
+                                )}`}
                               >
-                                RENT {String(r.rent.status).toUpperCase()}
+                                Түрээс {String(r.rent.status).toUpperCase()}
                               </span>
                             ) : null}
                           </div>
